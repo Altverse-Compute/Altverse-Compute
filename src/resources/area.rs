@@ -1,5 +1,4 @@
 use crate::config::RawArea;
-use crate::proto::PackedEntity;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
@@ -37,21 +36,21 @@ impl Area {
     }
   }
 
-  pub fn get_packed_entities(&self) -> HashMap<u64, PackedEntity> {
-    let mut packed_entities: HashMap<u64, PackedEntity> = HashMap::new();
+  pub fn get_packed_entities(&self) -> HashMap<u64, &EntityWrapper> {
+    let mut packed_entities: HashMap<u64, &EntityWrapper> = HashMap::new();
 
     for (id, entity) in self.entities.iter() {
-      packed_entities.insert(*id, entity.pack());
+      packed_entities.insert(*id, entity);
     }
 
     packed_entities
   }
 
-  pub fn get_packed_entities_vec(&self) -> Vec<PackedEntity> {
-    let mut packed_entities: Vec<PackedEntity> = Vec::new();
+  pub fn get_packed_entities_vec(&self) -> Vec<&EntityWrapper> {
+    let mut packed_entities: Vec<&EntityWrapper> = Vec::new();
 
     for (_, entity) in self.entities.iter() {
-      packed_entities.push(entity.pack());
+      packed_entities.push(entity);
     }
 
     packed_entities

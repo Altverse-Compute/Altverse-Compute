@@ -3,9 +3,7 @@ use crate::config::Config;
 use crate::managers::player::PlayersManager;
 use crate::props::EngineProps;
 use crate::proto::package::Kind;
-use crate::proto::{
-  CloseEntities, Entities, PackedEntity, PartialEntity, Players, UpdateEntitiesMap,
-};
+use crate::proto::{CloseEntities, Entities, Players, UpdateEntitiesMap};
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
 use crate::resources::world::World;
@@ -14,10 +12,10 @@ use std::collections::HashMap;
 
 pub struct WorldsManager {
   pub worlds: HashMap<String, World>,
-  pub new_entities: HashMap<u64, PackedEntity>,
-  pub old_entities: HashMap<u64, PackedEntity>,
-  pub entities_diff: HashMap<u32, PartialEntity>,
-  pub spawned_entities: HashMap<u32, PackedEntity>,
+  pub new_entities: Vec<u64>,
+  pub old_entities: Vec<u64>,
+  pub entities_diff: Vec<u64>,
+  pub spawned_entities: Vec<u64>,
   pub entities_to_remove: Vec<u32>,
 }
 
@@ -32,10 +30,10 @@ impl WorldsManager {
   pub fn new(props: &EngineProps) -> Self {
     Self {
       worlds: props.load_worlds().unwrap(),
-      new_entities: HashMap::new(),
-      old_entities: HashMap::new(),
-      entities_diff: HashMap::new(),
-      spawned_entities: HashMap::new(),
+      new_entities: Vec::new(),
+      old_entities: Vec::new(),
+      entities_diff: Vec::new(),
+      spawned_entities: Vec::new(),
       entities_to_remove: Vec::new(),
     }
   }
@@ -67,17 +65,17 @@ impl WorldsManager {
             let target_id = effect.effect().target_id.clone();
             let caster_id = effect.effect().caster_id.clone();
 
-              if let Some(target) = players.get_mut(&target_id) {
-                if let Some(caster) = area.entities.get_mut(&caster_id) {
-                  effect.update(&mut EffectUpdateProps {
-                    delta: props.delta,
-                    time_fix: props.time_fix,
-                    caster,
-                    target,
-                    boundary,
-                  });
-                }
+            if let Some(target) = players.get_mut(&target_id) {
+              if let Some(caster) = area.entities.get_mut(&caster_id) {
+                effect.update(&mut EffectUpdateProps {
+                  delta: props.delta,
+                  time_fix: props.time_fix,
+                  caster,
+                  target,
+                  boundary,
+                });
               }
+            }
           }
         }
 
