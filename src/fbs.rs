@@ -1,11 +1,11 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Role {
   User = 0,
   Mod,
   Dev,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Chat {
   pub id: u64,
   pub content: String,
@@ -14,7 +14,7 @@ pub struct Chat {
   pub world: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PackedArea {
   pub w: f32,
   pub h: f32,
@@ -23,7 +23,7 @@ pub struct PackedArea {
   pub entities: Vec<u64>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Package {
   NewPlayer(u64),
   ClosePlayer(u64),
@@ -33,7 +33,7 @@ pub enum Package {
 
   NewEntities((Vec<u64>, String, usize)),
   UpdateEntities((Vec<u64>, String, usize)),
-  CloseEntities((Vec<u64>, String, usize)),
+  CloseEntities(Vec<u64>),
 
   AreaInit(PackedArea),
   Chat(Chat),

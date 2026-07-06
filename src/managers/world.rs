@@ -147,7 +147,7 @@ impl WorldsManager {
 
         if !self.entities_to_remove.is_empty() {
           let package =
-            Package::CloseEntities((self.entities_to_remove.clone(), name.clone(), index.clone()));
+            Package::CloseEntities(self.entities_to_remove.clone());
           network_bus.add_area_package(name.clone(), index as u64, package.clone());
           self.entities_to_remove.clear();
         }

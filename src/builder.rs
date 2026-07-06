@@ -449,6 +449,7 @@ pub fn build_packages<'a>(
   worlds_manager: &WorldsManager,
 ) -> WIPOffset<Packages<'a>> {
   let mut packages = Vec::new();
+  println!("{:?}", client.packages);
   for package in client.packages.clone() {
     match package {
       OwnPackage::NewPlayer(id) => match players_manager.get_player(id) {
@@ -509,7 +510,7 @@ pub fn build_packages<'a>(
           .unwrap(),
         ids,
       )),
-      OwnPackage::CloseEntities((ids, world, area)) => {
+      OwnPackage::CloseEntities(ids) => {
         packages.push(build_close_entities(&mut client.flat_builder, ids))
       }
       OwnPackage::AreaInit(area) => packages.push(build_area_init(
