@@ -22,6 +22,13 @@ impl Vector {
     }
   }
 
+  pub fn from_mult(vec: Vector, mult: f64) -> Self {
+    Self {
+      x: vec.x * mult,
+      y: vec.y * mult,
+    }
+  }
+
   pub fn rand(xs: f64, ys: f64, xe: f64, ye: f64) -> Self {
     Self {
       x: random(xs, xe),

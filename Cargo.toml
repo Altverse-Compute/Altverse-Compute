@@ -16,8 +16,9 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 lazy_static = "1.5.0"
 prost = "0.14.1"
-effect = "0.1.1"
 lz4_flex = "0.12.0"
+track_changes_derive = { path = "additional/tracker" }
+flatbuffers = "25.12.19"
 
 [build-dependencies]
 napi-build = "2"

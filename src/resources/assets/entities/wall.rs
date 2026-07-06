@@ -1,7 +1,6 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::utils::vector::Vector;
 use crate::resources::{AdditionalEntityProps, Boundary, EntityProps, EntityUpdateProps};
 
@@ -94,21 +93,25 @@ impl Wall {
     let entity = &mut self.entity;
     if entity.pos.x - entity.radius < entity.boundary.x {
       entity.pos.x = entity.radius + entity.boundary.x + 1.0;
+      entity.changed_pos();
       entity.vel.x = 0.0;
       entity.vel.y = -entity.speed * self.dir_act as f64;
     }
     if entity.pos.x + entity.radius > entity.boundary.x + entity.boundary.w {
       entity.pos.x = entity.boundary.w - entity.radius + entity.boundary.x;
+      entity.changed_pos();
       entity.vel.x = 0.0;
       entity.vel.y = entity.speed * self.dir_act as f64;
     }
     if entity.pos.y - entity.radius < entity.boundary.y {
       entity.pos.y = entity.radius + entity.boundary.y + 1.0;
+      entity.changed_pos();
       entity.vel.y = 0.0;
       entity.vel.x = entity.speed * self.dir_act as f64;
     }
     if entity.pos.y + entity.radius > entity.boundary.y + entity.boundary.h {
       entity.pos.y = entity.boundary.h - entity.radius + entity.boundary.y;
+      entity.changed_pos();
       entity.vel.y = 0.0;
       entity.vel.x = -entity.speed * self.dir_act as f64;
     }
@@ -125,8 +128,12 @@ impl EntityLogic for Wall {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

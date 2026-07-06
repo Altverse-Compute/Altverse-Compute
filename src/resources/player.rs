@@ -1,16 +1,16 @@
-use crate::proto::PackedPlayer;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::utils::vector::Vector;
 use crate::resources::{distance, Boundary, PlayerUpdateProps};
 use crate::CONFIG;
+use track_changes_derive::TrackChanges;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, TrackChanges)]
 pub struct Player {
   pub name: String,
   pub id: i64,
-  pub pos: Vector,
-  pub radius: f64,
+  pub(crate) pos: Vector,
+  pub(crate) radius: f64,
   pub vel: Vector,
   acc: Vector,
   slide: Vector,
@@ -21,14 +21,18 @@ pub struct Player {
   pub regeneration: f64,
   pub world: String,
   pub area: u64,
+  #[track(skip)]
   angle: f64,
   pub death_timer: f64,
 
   pub immortal: bool,
   pub state: u64,
   pub state_meta: f64,
+  #[track(skip)]
   pub to_delete: bool,
   pub hero: u32,
+
+  pub changes: Vec<PlayerField>,
 }
 
 impl Player {
@@ -56,6 +60,7 @@ impl Player {
       area: spawn.area as u64,
       to_delete: false,
       hero: 0,
+      changes: Vec::new(),
     }
   }
 
@@ -100,6 +105,10 @@ impl Player {
         self.to_delete = true;
       }
     }
+
+    self.changed_pos();
+    self.changed_death_timer();
+
     //
     // for effect in self.effects.clone().values_mut() {
     //   effect.disable(self);
@@ -112,6 +121,7 @@ impl Player {
     if self.energy > self.max_energy {
       self.energy = self.max_energy;
     }
+    self.changed_energy();
   }
 
   pub fn input(&mut self, input: &mut Input) {
@@ -156,44 +166,59 @@ impl Player {
   pub fn knock(&mut self) {
     self.downed = true;
     self.death_timer = 60.0;
+    self.changed_downed();
+    self.changed_death_timer();
   }
 
   pub fn res(&mut self) {
     self.downed = false;
+    self.changed_downed();
   }
 
   pub fn collide(&mut self, boundary: Boundary) {
     if self.pos.x - self.radius < boundary.x {
       self.pos.x = boundary.x + self.radius;
+      self.changed_pos();
     }
     if self.pos.x + self.radius > boundary.x + boundary.w {
       self.pos.x = boundary.x + boundary.w - self.radius;
+      self.changed_pos();
     }
     if self.pos.y - self.radius < boundary.y {
       self.pos.y = boundary.y + self.radius;
+      self.changed_pos();
     }
     if self.pos.y + self.radius > boundary.y + boundary.h {
       self.pos.y = boundary.y + boundary.h - self.radius;
+      self.changed_pos();
     }
   }
 
-  pub fn pack(&self) -> PackedPlayer {
-    PackedPlayer {
-      id: self.id as u32,
-      name: self.name.clone(),
-      x: (self.pos.x * 2.0).round() as i32,
-      y: (self.pos.y * 2.0).round() as i32,
-      radius: (self.radius * 2.0).round().abs() as u32,
-      speed: (self.speed * 2.0).round().abs() as u32,
-      energy: (self.energy * 2.0).round().abs() as u32,
-      max_energy: (self.max_energy * 2.0).round().abs() as u32,
-      death_timer: self.death_timer.round() as u32,
-      state: self.state as u32,
-      area: self.area as u32,
-      world: self.world.clone(),
-      died: self.downed,
-      state_meta: (self.state_meta * 2.0).round().abs() as u32,
-      hero: self.hero,
-    }
+  pub fn get_changes(&self) -> Vec<PlayerField> {
+    self.changes.clone()
   }
+
+  pub fn clear_changes(&mut self) {
+    self.changes = Vec::new();
+  }
+
+  // pub fn pack(&self) -> PackedPlayer {
+  //   PackedPlayer {
+  //     id: self.id as u32,
+  //     name: self.name.clone(),
+  //     x: (self.pos.x * 2.0).round() as i32,
+  //     y: (self.pos.y * 2.0).round() as i32,
+  //     radius: (self.radius * 2.0).round().abs() as u32,
+  //     speed: (self.speed * 2.0).round().abs() as u32,
+  //     energy: (self.energy * 2.0).round().abs() as u32,
+  //     max_energy: (self.max_energy * 2.0).round().abs() as u32,
+  //     death_timer: self.death_timer.round() as u32,
+  //     state: self.state as u32,
+  //     area: self.area as u32,
+  //     world: self.world.clone(),
+  //     died: self.downed,
+  //     state_meta: (self.state_meta * 2.0).round().abs() as u32,
+  //     hero: self.hero,
+  //   }
+  // }
 }

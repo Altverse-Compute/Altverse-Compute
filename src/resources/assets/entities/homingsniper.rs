@@ -1,8 +1,7 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::player::Player;
 use crate::resources::{distance, random, AdditionalEntityProps, EntityProps, EntityUpdateProps};
 
@@ -87,8 +86,12 @@ impl EntityLogic for HomingSniper {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {
@@ -112,23 +115,15 @@ impl HomingBullet {
   }
   fn collide(entity: &mut Entity) {
     if entity.pos.x - entity.radius < entity.boundary.x {
-      entity.pos.x = entity.boundary.x + entity.radius;
-      entity.vel.x = entity.vel.x.abs();
       entity.to_remove = true;
     }
     if entity.pos.x + entity.radius > entity.boundary.x + entity.boundary.w {
-      entity.pos.x = entity.boundary.x + entity.boundary.w - entity.radius;
-      entity.vel.x = -(entity.vel.x.abs());
       entity.to_remove = true;
     }
     if entity.pos.y - entity.radius < entity.boundary.y {
-      entity.pos.y = entity.boundary.y + entity.radius;
-      entity.vel.y = entity.vel.y.abs();
       entity.to_remove = true;
     }
     if entity.pos.y + entity.radius > entity.boundary.y + entity.boundary.h {
-      entity.pos.y = entity.boundary.y + entity.boundary.h - entity.radius;
-      entity.vel.y = -(entity.vel.y.abs());
       entity.to_remove = true;
     }
   }
@@ -179,8 +174,12 @@ impl EntityLogic for HomingBullet {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

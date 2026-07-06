@@ -1,8 +1,7 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
 
 #[derive(Clone)]
@@ -41,6 +40,7 @@ impl EntityLogic for Flame {
         },
       );
       trail.entity.pos = self.entity.pos.clone();
+      trail.entity.changed_pos();
 
       trail.owner_speed = self.entity.speed;
       self.timer = 0.0;
@@ -52,8 +52,12 @@ impl EntityLogic for Flame {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {
@@ -89,11 +93,13 @@ impl EntityLogic for FlameTrail {
 
     self.timer += props.delta as f64;
     self.entity.alpha = 1.0 - self.timer / (5000.0 / self.owner_speed);
+    self.entity.changed_alpha();
     if self.timer >= 5000.0 / self.owner_speed {
       self.entity.to_remove = true;
     }
     if self.timer >= 3500.0 {
       self.entity.harmless = true;
+      self.entity.changed_harmless();
     }
   }
 
@@ -101,8 +107,12 @@ impl EntityLogic for FlameTrail {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

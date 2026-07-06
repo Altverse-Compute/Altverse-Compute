@@ -1,7 +1,6 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
 
 #[derive(Clone)]
@@ -37,14 +36,20 @@ impl EntityLogic for Fade {
     let phase = (self.timer / period) * std::f64::consts::TAU;
     self.entity.alpha = (phase.cos() + 1.0) * 0.5;
     self.entity.harmless = self.entity.alpha < 0.5;
+    self.entity.changed_alpha();
+    self.entity.changed_harmless();
   }
 
   fn interact(&mut self, player: &mut HeroWrapper) {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

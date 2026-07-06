@@ -1,7 +1,6 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
 
 #[derive(Clone)]
@@ -28,8 +27,12 @@ impl EntityLogic for Immune {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

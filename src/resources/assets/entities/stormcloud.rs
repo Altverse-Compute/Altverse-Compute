@@ -1,7 +1,6 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdateProps};
 
 #[derive(Clone)]
@@ -31,6 +30,7 @@ impl EntityLogic for StormCloud {
     self.time_fix = props.time_fix;
     self.timer = (self.timer % 2000.0) + props.delta as f64;
     self.entity.alpha = ((self.timer / 1000.0).sin()).abs();
+    self.entity.changed_alpha();
   }
 
   fn interact(&mut self, player: &mut HeroWrapper) {
@@ -53,12 +53,17 @@ impl EntityLogic for StormCloud {
         let angle = dy.atan2(dx);
         player.pos.x += move_dist * angle.cos() * self.time_fix;
         player.pos.y += move_dist * angle.sin() * self.time_fix;
+        player.changed_pos();
       }
     }
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

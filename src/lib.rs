@@ -4,6 +4,8 @@ use crate::config::Config;
 use crate::managers::player::PlayersManager;
 use crate::managers::world::WorldsManager;
 use crate::props::EngineProps;
+use crate::proto::package::Kind;
+use crate::proto::{Chat, Package, Role};
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::UpdateProps;
@@ -18,8 +20,6 @@ use napi_derive::napi;
 use std::collections::HashMap;
 use std::io;
 use std::sync::Mutex;
-use crate::proto::{Chat, Package, Role};
-use crate::proto::package::Kind;
 
 pub mod proto {
   include!(concat!(env!("OUT_DIR"), "/game.rs"));
@@ -27,6 +27,7 @@ pub mod proto {
 
 mod bus;
 mod config;
+mod fbs;
 mod managers;
 mod props;
 mod resources;
@@ -94,7 +95,7 @@ impl ComputeEngine {
       self.network_bus.add_global_package(Kind::ChatMessage(Chat {
         id,
         content,
-        author:hero.player().name.clone(),
+        author: hero.player().name.clone(),
         role: 0,
         world: hero.player().world.clone(),
       }))

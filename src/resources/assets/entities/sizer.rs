@@ -1,7 +1,6 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
 
 #[derive(Clone)]
@@ -32,11 +31,13 @@ impl EntityLogic for Sizer {
     self.entity.collide();
     if self.growing {
       self.entity.radius += (props.time_fix * 0.08) * self.min_radius;
+      self.entity.changed_radius();
       if self.entity.radius > self.max_radius {
         self.growing = false;
       }
     } else {
       self.entity.radius -= ((props.delta as f64 / 30.0) * 0.08) * self.min_radius;
+      self.entity.changed_radius();
       if self.entity.radius < self.min_radius {
         self.growing = true;
       }
@@ -47,8 +48,12 @@ impl EntityLogic for Sizer {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

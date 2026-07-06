@@ -1,6 +1,5 @@
-use crate::proto::PackedPlayer;
 use crate::resources::assets::heroes::Hero;
-use crate::resources::player::Player;
+use crate::resources::player::{Player, PlayerField};
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::{distance, Boundary, PlayerUpdateProps};
@@ -98,8 +97,12 @@ impl Hero for Maven {
     self.player.collide(boundary);
   }
 
-  fn pack(&self) -> PackedPlayer {
-    self.player.pack()
+  fn get_changes(&self) -> Vec<PlayerField> {
+    self.player.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.player.clear_changes();
   }
 
   fn player(&self) -> &Player {

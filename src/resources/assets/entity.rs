@@ -1,27 +1,26 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::bee::Bee;
+use crate::resources::assets::entities::cloud::Cloud;
+use crate::resources::assets::entities::draining::Draining;
 use crate::resources::assets::entities::drop::Drop;
 use crate::resources::assets::entities::fade::Fade;
 use crate::resources::assets::entities::flame::{Flame, FlameTrail};
 use crate::resources::assets::entities::flamesniper::{FlameBullet, FlameSniper};
 use crate::resources::assets::entities::homing::Homing;
 use crate::resources::assets::entities::homingsniper::{HomingBullet, HomingSniper};
+use crate::resources::assets::entities::icicle::Icicle;
 use crate::resources::assets::entities::immune::Immune;
+use crate::resources::assets::entities::leaf::Leaf;
 use crate::resources::assets::entities::normal::Normal;
 use crate::resources::assets::entities::sizer::Sizer;
 use crate::resources::assets::entities::slow::Slow;
 use crate::resources::assets::entities::sniper::{Bullet, Sniper};
+use crate::resources::assets::entities::stormcloud::StormCloud;
 use crate::resources::assets::entities::wall::Wall;
 use crate::resources::assets::entities::EntityLogic;
-use crate::resources::assets::entities::cloud::Cloud;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
 use napi::{Error, Status};
-use crate::resources::assets::entities::draining::Draining;
-use crate::resources::assets::entities::icicle::Icicle;
-use crate::resources::assets::entities::leaf::Leaf;
-use crate::resources::assets::entities::stormcloud::StormCloud;
 
 macro_rules! entity_dispatch {
   ($self:expr, $method:ident($($arg:expr),*)) => {
@@ -75,7 +74,7 @@ pub enum EntityWrapper {
   Draining(Draining),
   Leaf(Leaf),
   Cloud(Cloud),
-  StormCloud(StormCloud)
+  StormCloud(StormCloud),
 }
 
 impl EntityWrapper {
@@ -106,7 +105,9 @@ impl EntityWrapper {
       "draining" => Ok(EntityWrapper::Draining(Draining::new(*props, additional))),
       "leaf" => Ok(EntityWrapper::Leaf(Leaf::new(*props, additional))),
       "cloud" => Ok(EntityWrapper::Cloud(Cloud::new(*props, additional))),
-      "storm_cloud" => Ok(EntityWrapper::StormCloud(StormCloud::new(*props, additional))),
+      "storm_cloud" => Ok(EntityWrapper::StormCloud(StormCloud::new(
+        *props, additional,
+      ))),
       _ => Err(Error::new(
         Status::InvalidArg,
         "Unknown enemy type: ".to_string() + name,
@@ -122,8 +123,11 @@ impl EntityWrapper {
     entity_dispatch!(self, interact(player));
   }
 
-  pub fn pack(&self) -> PackedEntity {
-    entity_dispatch!(self, pack())
+  pub fn get_changes(&self) -> Vec<EntityField> {
+    entity_dispatch!(self, get_changes())
+  }
+  pub fn clear_changes(&mut self) {
+    entity_dispatch!(self, clear_changes());
   }
 
   pub fn entity(&self) -> &Entity {

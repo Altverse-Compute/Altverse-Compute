@@ -1,8 +1,7 @@
 use crate::bus::PlayerEvent;
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{distance, random, AdditionalEntityProps, EntityProps, EntityUpdateProps};
 
 #[derive(Clone)]
@@ -12,7 +11,7 @@ pub struct Leaf {
   remove_time: f64,
   remove: bool,
   start_radius: f64,
-  players: Vec<i64>
+  players: Vec<i64>,
 }
 
 impl Leaf {
@@ -23,12 +22,25 @@ impl Leaf {
     entity.vel.y = 0.0;
     entity.harmless = true;
     let start_radius = entity.radius;
-    Self { entity, time_spawn: 1000.0, remove_time: 500.0, remove: false, start_radius, players: Vec::new() }
+    Self {
+      entity,
+      time_spawn: 1000.0,
+      remove_time: 500.0,
+      remove: false,
+      start_radius,
+      players: Vec::new(),
+    }
   }
 
   fn respawn(&mut self) {
-    self.entity.pos.x = random(self.entity.radius + self.entity.boundary.x, self.entity.boundary.w);
-    self.entity.pos.y = random(self.entity.radius + self.entity.boundary.y, self.entity.boundary.h);
+    self.entity.pos.x = random(
+      self.entity.radius + self.entity.boundary.x,
+      self.entity.boundary.w,
+    );
+    self.entity.pos.y = random(
+      self.entity.radius + self.entity.boundary.y,
+      self.entity.boundary.h,
+    );
     self.time_spawn = 1000.0;
     self.remove_time = 500.0;
     self.remove = false;
@@ -44,17 +56,23 @@ impl EntityLogic for Leaf {
       self.time_spawn -= props.delta as f64;
       self.entity.radius = self.start_radius * 2.0 * 0.5_f64.max(self.time_spawn / 1000.0);
       self.entity.alpha = 1.0 - self.time_spawn / 1000.0;
+      self.entity.changed_alpha();
+      self.entity.changed_radius();
     } else if self.time_spawn <= 0.0 && self.entity.harmless {
       self.entity.harmless = false;
       self.entity.radius = self.start_radius;
+      self.entity.changed_radius();
+      self.entity.changed_harmless();
       self.time_spawn = 0.0;
     }
     if self.remove {
       self.remove_time -= props.delta as f64;
       self.entity.harmless = true;
       self.entity.alpha = self.remove_time / 500.0;
-      self.entity.radius =
-          self.start_radius * 2.0 * 0.5_f64.max(1.0 - self.remove_time / 500.0);
+      self.entity.radius = self.start_radius * 2.0 * 0.5_f64.max(1.0 - self.remove_time / 500.0);
+      self.entity.changed_alpha();
+      self.entity.changed_radius();
+      self.entity.changed_harmless();
       if self.remove_time < 0.0 {
         self.respawn();
       }
@@ -72,12 +90,14 @@ impl EntityLogic for Leaf {
   fn interact(&mut self, hero: &mut HeroWrapper) {
     let player = hero.player_mut();
     if !self.entity.harmless
-        && player.pos.x > -player.radius
-        && player.pos.x - player.radius < self.entity.boundary.w
+      && player.pos.x > -player.radius
+      && player.pos.x - player.radius < self.entity.boundary.w
     {
       if !player.immortal && !player.downed {
-        if distance(player.pos.x - self.entity.pos.x, player.pos.y - self.entity.pos.y)
-            <= self.entity.radius + player.radius
+        if distance(
+          player.pos.x - self.entity.pos.x,
+          player.pos.y - self.entity.pos.y,
+        ) <= self.entity.radius + player.radius
         {
           self.players.push(hero.player().id);
           self.remove = true;
@@ -86,8 +106,12 @@ impl EntityLogic for Leaf {
     }
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

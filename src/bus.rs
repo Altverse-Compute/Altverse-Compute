@@ -8,7 +8,7 @@ use crate::resources::utils::vector::Vector;
 use std::collections::HashMap;
 
 pub struct Client {
-  pub packages: Packages,
+  pub packages: Vec<Package>,
   pub input: Input,
 }
 

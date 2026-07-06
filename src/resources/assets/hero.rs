@@ -1,7 +1,6 @@
-use crate::proto::PackedPlayer;
 use crate::resources::assets::heroes::maven::Maven;
 use crate::resources::assets::heroes::Hero;
-use crate::resources::player::Player;
+use crate::resources::player::{Player, PlayerField};
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::{Boundary, PlayerUpdateProps};
@@ -46,8 +45,11 @@ impl HeroWrapper {
     hero_dispatch!(self, collide(boundary));
   }
 
-  pub fn pack(&self) -> PackedPlayer {
-    hero_dispatch!(self, pack())
+  pub fn get_changes(&self) -> Vec<PlayerField> {
+    hero_dispatch!(self, get_changes())
+  }
+  pub fn clear_changes(&mut self) {
+    hero_dispatch!(self, clear_changes());
   }
 
   pub fn player(&self) -> &Player {
