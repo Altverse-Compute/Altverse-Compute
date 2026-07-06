@@ -161,6 +161,8 @@ impl ComputeEngine {
     }
 
     self.network_bus.clear_packages();
+    self.players_manager.clean_changes();
+    self.worlds_manager.clean_changes();
 
     Ok(object)
   }

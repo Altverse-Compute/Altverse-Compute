@@ -84,14 +84,17 @@ impl PlayersManager {
 
   pub fn snapshot_end(&mut self, network_bus: &mut NetworkBus) {
     self.players_diff.clear();
-    for (id, wrapper) in &self.players {
-      if !wrapper.get_changes().is_empty() {
-        self.players_diff.push(*id);
+    for index in 0..self.players.len() {
+      if let Some(wrapper) = self.players.get_mut(&(index as u64)) {
+        if !wrapper.get_changes().is_empty() {
+          self.players_diff.push(index as u64);
+        }
       }
     }
     if !self.players_diff.is_empty() {
       network_bus.add_global_package(Package::UpdatePlayers(self.players_diff.clone()));
     }
+    self.players_diff.clear();
   }
 
   pub fn update_behavior(
@@ -200,5 +203,11 @@ impl PlayersManager {
     }
 
     result
+  }
+
+  pub fn clean_changes(&mut self) {
+    for (_, player) in self.players.iter_mut() {
+      player.clear_changes();
+    }
   }
 }

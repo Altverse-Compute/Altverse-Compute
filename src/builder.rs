@@ -410,7 +410,7 @@ fn build_area_init<'a>(
   Package::create(
     builder,
     &PackageArgs {
-      kind_type: PackageKind::update_entities,
+      kind_type: PackageKind::area_init,
       kind: Some(update_players.as_union_value()),
     },
   )
@@ -449,7 +449,6 @@ pub fn build_packages<'a>(
   worlds_manager: &WorldsManager,
 ) -> WIPOffset<Packages<'a>> {
   let mut packages = Vec::new();
-  println!("{:?}", client.packages);
   for package in client.packages.clone() {
     match package {
       OwnPackage::NewPlayer(id) => match players_manager.get_player(id) {

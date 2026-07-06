@@ -87,8 +87,11 @@ impl WorldsManager {
           }
         });
 
-        for (_, entity) in area.entities.iter_mut() {
+        for (id, entity) in area.entities.iter_mut() {
           entity.update(&mut entity_update);
+          if !entity.get_changes().is_empty() {
+              self.entities_diff.push(*id);
+           }
         }
 
         for (_, entity) in area.entities.iter_mut() {
@@ -130,32 +133,24 @@ impl WorldsManager {
 
         self.new_entities = area.get_packed_entities();
 
-        for id in self.new_entities.iter() {
-          if let Some(entity) = area.entities.get(id) {
-            if !entity.get_changes().is_empty() {
-              self.entities_diff.push(*id);
-            }
-          }
-        }
-
         if !self.spawned_entities.is_empty() {
           let package =
             Package::NewEntities((self.spawned_entities.clone(), name.clone(), index.clone()));
-          network_bus.add_area_package(name.clone(), index as u64, package.clone());
+          network_bus.add_area_package(area.players_id.clone(), package.clone());
           self.spawned_entities.clear();
         }
 
         if !self.entities_to_remove.is_empty() {
           let package =
             Package::CloseEntities(self.entities_to_remove.clone());
-          network_bus.add_area_package(name.clone(), index as u64, package.clone());
+          network_bus.add_area_package(area.players_id.clone(), package.clone());
           self.entities_to_remove.clear();
         }
 
         if !self.entities_diff.is_empty() {
           let package =
             Package::UpdateEntities((self.entities_diff.clone(), name.clone(), index.clone()));
-          network_bus.add_area_package(name.clone(), index as u64, package.clone());
+          network_bus.add_area_package(area.players_id.clone(), package.clone());
           self.entities_diff.clear();
         }
       }
@@ -312,5 +307,15 @@ impl WorldsManager {
       }
     }
     false
+  }
+
+  pub fn clean_changes(&mut self) {
+    for (_, world) in self.worlds.iter_mut() {
+      for area in world.areas.iter_mut() {
+        for (_, entity) in area.entities.iter_mut() {
+          entity.clear_changes();
+        }
+      }
+    }
   }
 }

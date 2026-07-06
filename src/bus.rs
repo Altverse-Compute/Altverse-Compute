@@ -15,14 +15,12 @@ pub struct Client {
 
 pub struct NetworkBus {
   pub direct_clients: HashMap<u64, Client>,
-  pub area_clients: HashMap<(String, u64), Vec<Package>>,
 }
 
 impl NetworkBus {
   pub fn new() -> Self {
     Self {
       direct_clients: HashMap::new(),
-      area_clients: HashMap::new(),
     }
   }
 
@@ -55,11 +53,11 @@ impl NetworkBus {
     }
   }
 
-  pub fn add_area_package(&mut self, name: String, area: u64, package: Package) {
-    if let Some(area) = self.area_clients.get_mut(&(name.clone(), area)) {
-      area.push(package);
-    } else {
-      self.area_clients.insert((name, area), Vec::new());
+  pub fn add_area_package(&mut self, ids: Vec<u64>, package: Package) {
+    for id in ids {
+      if let Some(client) = self.direct_clients.get_mut(&id) {
+        client.packages.push(package.clone());
+      }
     }
   }
 
