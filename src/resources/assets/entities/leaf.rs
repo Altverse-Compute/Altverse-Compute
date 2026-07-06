@@ -54,7 +54,7 @@ impl EntityLogic for Leaf {
 
     if self.time_spawn > 0.0 {
       self.time_spawn -= props.delta;
-      self.entity.radius = self.start_radius * 2.0 * 0.5.max(self.time_spawn / 1000.0);
+      self.entity.radius = self.start_radius * 2.0 * 0.5f32.max(self.time_spawn / 1000.0);
       self.entity.alpha = 1.0 - self.time_spawn / 1000.0;
       self.entity.changed_alpha();
       self.entity.changed_radius();
@@ -66,10 +66,10 @@ impl EntityLogic for Leaf {
       self.time_spawn = 0.0;
     }
     if self.remove {
-      self.remove_time -= props.delta as f64;
+      self.remove_time -= props.delta;
       self.entity.harmless = true;
       self.entity.alpha = self.remove_time / 500.0;
-      self.entity.radius = self.start_radius * 2.0 * 0.5_f64.max(1.0 - self.remove_time / 500.0);
+      self.entity.radius = self.start_radius * 2.0 * 0.5_f32.max(1.0 - self.remove_time / 500.0);
       self.entity.changed_alpha();
       self.entity.changed_radius();
       self.entity.changed_harmless();

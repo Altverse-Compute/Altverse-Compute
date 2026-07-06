@@ -9,8 +9,8 @@ pub struct Input {
   pub down: bool,
   pub shift: bool,
   pub mouse_enable: bool,
-  pub mouse_pos_x: f32,
-  pub mouse_pos_y: f32,
+  pub mouse_pos_x: f64,
+  pub mouse_pos_y: f64,
   pub first_ability: bool,
   pub second_ability: bool,
 }
@@ -63,12 +63,12 @@ impl Input {
   }
 
   #[napi]
-  pub fn set_mouse_pos_x(&mut self, val: f32) {
+  pub fn set_mouse_pos_x(&mut self, val: f64) {
     self.mouse_pos_x = val;
   }
 
   #[napi]
-  pub fn set_mouse_pos_y(&mut self, val: f32) {
+  pub fn set_mouse_pos_y(&mut self, val: f64) {
     self.mouse_pos_y = val;
   }
 

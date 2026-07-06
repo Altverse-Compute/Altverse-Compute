@@ -40,7 +40,7 @@ impl Player {
     let spawn = CONFIG.lock().unwrap().clone().spawn;
     Player {
       name: props.name,
-      id: props.id,
+      id: props.id as u64,
       pos: Vector::rand(spawn.sx, spawn.sy, spawn.ex, spawn.ey),
       radius: spawn.radius,
       vel: Vector::new(None, None),
@@ -116,8 +116,8 @@ impl Player {
     // self.effects.clear();
   }
 
-  fn regenerate_energy(&mut self, delta: i64) {
-    self.energy += self.regeneration * (delta as f32 / 1000.0);
+  fn regenerate_energy(&mut self, delta: f32) {
+    self.energy += self.regeneration * (delta / 1000.0);
     if self.energy > self.max_energy {
       self.energy = self.max_energy;
     }
@@ -140,20 +140,20 @@ impl Player {
       self.acc.y = self.speed * shift;
     }
     if input.mouse_enable {
-      let dist = distance(input.mouse_pos_x, input.mouse_pos_y);
-      let mut speed_x = input.mouse_pos_x;
-      let mut speed_y = input.mouse_pos_y;
+      let dist = distance(input.mouse_pos_x as f32, input.mouse_pos_y as f32);
+      let mut speed_x = input.mouse_pos_x as f32;
+      let mut speed_y = input.mouse_pos_y as f32;
 
       if dist > 150.0 {
-        speed_x = input.mouse_pos_x * (150.0 / dist);
-        speed_y = input.mouse_pos_y * (150.0 / dist);
+        speed_x = (input.mouse_pos_x as f32) * (150.0 / dist);
+        speed_y = (input.mouse_pos_y as f32) * (150.0 / dist);
       }
 
       self.angle = speed_y.atan2(speed_x);
 
       let mouse_dist = (input.mouse_pos_x.powf(2.0) + input.mouse_pos_y.powf(2.0))
         .sqrt()
-        .min(150.0);
+        .min(150.0) as f32;
 
       let mut dist_movement = self.speed * shift;
       dist_movement *= mouse_dist / 150.0;

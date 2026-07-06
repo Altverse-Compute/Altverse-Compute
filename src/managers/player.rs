@@ -84,15 +84,13 @@ impl PlayersManager {
 
   pub fn snapshot_end(&mut self, network_bus: &mut NetworkBus) {
     self.players_diff.clear();
-
-    for (id, wrapper) in self.players {
+    for (id, wrapper) in &self.players {
       if !wrapper.get_changes().is_empty() {
-        self.players_diff.push(id);
+        self.players_diff.push(*id);
       }
     }
-
     if !self.players_diff.is_empty() {
-      network_bus.add_global_package(Package::UpdatePlayers(self.players_diff.clone()))
+      network_bus.add_global_package(Package::UpdatePlayers(self.players_diff.clone()));
     }
   }
 

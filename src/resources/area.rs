@@ -75,7 +75,7 @@ impl Area {
           };
           let type_name = entity
             .types
-            .get(random(0.0, entity.types.len() as f32 - 1.0).round())
+            .get(random(0.0, entity.types.len() as f32 - 1.0).round() as usize)
             .unwrap();
           let additional = AdditionalEntityProps {
             count: entity.count as u64,

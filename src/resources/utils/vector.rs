@@ -1,8 +1,6 @@
 use crate::resources::random;
-use napi_derive::napi;
 
 #[derive(Clone, Debug)]
-#[napi]
 pub struct Vector {
   pub x: f32,
   pub y: f32,
@@ -31,8 +29,8 @@ impl Vector {
 
   pub fn rand(xs: f32, ys: f32, xe: f32, ye: f32) -> Self {
     Self {
-      x: random(xs as f64, xe as f64) as f32,
-      y: random(ys as f64, ye as f64) as f32,
+      x: random(xs, xe) as f32,
+      y: random(ys, ye) as f32,
     }
   }
 

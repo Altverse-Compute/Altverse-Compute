@@ -1,4 +1,5 @@
 // #[deny(clippy::all)]
+use crate::builder::build_packages;
 use crate::bus::{EventBus, NetworkBus};
 use crate::config::Config;
 use crate::fbs::{Chat, Package, Role};
@@ -10,18 +11,15 @@ use crate::resources::utils::join::JoinProps;
 use crate::resources::UpdateProps;
 use chrono::Utc;
 use lazy_static::lazy_static;
-use lz4_flex::frame::FrameEncoder;
-use napi::bindgen_prelude::Function;
 use napi::bindgen_prelude::Null;
-use napi::bindgen_prelude::{JsObjectValue, Object, Uint8ArraySlice};
+use napi::bindgen_prelude::{Function, Uint8ArraySlice};
+use napi::bindgen_prelude::{JsObjectValue, Object};
 use napi::{Env, Error};
 use napi_derive::napi;
-use std::collections::HashMap;
-use std::io;
 use std::sync::Mutex;
 
 pub mod flat {
-  include!("proto/generated/game_generated.rs");
+  include!("proto/generated/flat/game_generated.rs");
 }
 
 mod builder;
@@ -45,12 +43,12 @@ pub struct ComputeEngine {
   proto_buffer: Vec<u8>,
 
   last_timestamp: i64,
-  player_death_callback: Option<Function<'static, u64, Null>>,
+  player_death_callback: Option<Function<'static, i64, Null>>,
 }
 
-// #[napi]
+#[napi]
 impl ComputeEngine {
-  // #[napi(constructor)]
+  #[napi(constructor)]
   pub fn new(props: &EngineProps) -> Result<Self, Error> {
     // let worlds = props.load_worlds()?;
     let config = props.load_config()?;
@@ -68,9 +66,9 @@ impl ComputeEngine {
     })
   }
 
-  // #[napi]
+  #[napi]
   pub fn join(&mut self, player_props: &JoinProps) -> Result<(), Error> {
-    self.network_bus.add_client(player_props.id);
+    self.network_bus.add_client(player_props.id as u64);
     self.players_manager.join(
       player_props,
       &mut self.worlds_manager.worlds,
@@ -79,21 +77,21 @@ impl ComputeEngine {
     Ok(())
   }
 
-  // #[napi]
-  pub fn leave(&mut self, player_id: u64) {
+  #[napi]
+  pub fn leave(&mut self, player_id: i64) {
     self.players_manager.leave(
-      player_id,
+      player_id as u64,
       &mut self.worlds_manager.worlds,
       &mut self.network_bus,
     );
-    self.network_bus.remove_client(player_id);
+    self.network_bus.remove_client(player_id as u64);
   }
 
-  // #[napi]
-  pub fn chat_message(&mut self, content: String, id: u64) {
+  #[napi]
+  pub fn chat_message(&mut self, content: String, id: i64) {
     if let Some(hero) = self.players_manager.get_player(id as u64) {
       self.network_bus.add_global_package(Package::Chat(Chat {
-        id,
+        id: id.try_into().unwrap(),
         content,
         author: hero.player().name.clone(),
         role: Role::User,
@@ -102,17 +100,17 @@ impl ComputeEngine {
     }
   }
 
-  // #[napi]
-  pub fn input(&mut self, id: u64, input: &Input) {
-    self.network_bus.accept_input(id, input);
+  #[napi]
+  pub fn input(&mut self, id: i64, input: &Input) {
+    self.network_bus.accept_input(id as u64, input);
   }
 
-  // #[napi]
-  pub fn on_player_death(&mut self, callback: Function<'static, u64, Null>) {
+  #[napi]
+  pub fn on_player_death(&mut self, callback: Function<'static, i64, Null>) {
     self.player_death_callback = Some(callback);
   }
 
-  // #[napi]
+  #[napi]
   pub fn update(&mut self, env: &Env) -> Result<Object<'_>, Error> {
     let config = CONFIG.lock().unwrap();
 
@@ -142,8 +140,8 @@ impl ComputeEngine {
 
     if let Some(callback) = self.player_death_callback {
       for id in self.players_manager.check_players_to_remove() {
-        self.leave(id);
-        let _ = callback.call(id);
+        self.leave(id.try_into().unwrap());
+        let _ = callback.call(id.try_into().unwrap());
       }
     }
 
@@ -153,45 +151,13 @@ impl ComputeEngine {
   fn packages_as_napi(&mut self, env: &Env) -> Result<Object<'_>, Error> {
     let mut object = Object::new(env)?;
 
-    let mut built_areas: HashMap<(String, u64), Vec<u8>> = HashMap::new();
-
-    for (key, value) in self.network_bus.area_clients.iter_mut() {
-      let mut proto_buffer = Vec::new();
-      if let Ok(_) = prost::Message::encode(value, &mut proto_buffer) {
-        built_areas.insert(key.clone(), proto_buffer);
-      }
-      value.items.clear();
-    }
-
-    for (index, client) in self.network_bus.direct_clients.iter_mut() {
-      if let Some(hero) = self.players_manager.players.get(index) {
-        self.proto_buffer.clear();
-        let player = hero.player();
-        let key = env.create_string(index.to_string())?;
-        if let Some(buffer) = built_areas.get(&(player.world.clone(), player.area)) {
-          self.proto_buffer = buffer.clone();
-          if let Ok(_) = prost::Message::encode(&client.packages, &mut self.proto_buffer) {
-            let mut slice = self.proto_buffer.as_slice();
-            let mut compressor = FrameEncoder::new(Vec::new());
-            io::copy(&mut slice, &mut compressor)?;
-            if let Ok(buffer) = compressor.finish() {
-              let uint8 = Uint8ArraySlice::from_data(env, buffer)?;
-              object.set_property(key, uint8)?;
-            }
-          }
-        } else {
-          self.proto_buffer = Vec::new();
-          if let Ok(_) = prost::Message::encode(&client.packages, &mut self.proto_buffer) {
-            let mut slice = self.proto_buffer.as_slice();
-            let mut compressor = FrameEncoder::new(Vec::new());
-            io::copy(&mut slice, &mut compressor)?;
-            if let Ok(buffer) = compressor.finish() {
-              let uint8 = Uint8ArraySlice::from_data(env, buffer)?;
-              object.set_property(key, uint8)?;
-            }
-          }
-        }
-      }
+    for (key, value) in self.network_bus.direct_clients.iter_mut() {
+      let result = build_packages(value, &mut self.players_manager, &mut self.worlds_manager);
+      value.flat_builder.finish(result, None);
+      let uint8 = Uint8ArraySlice::from_data(env, value.flat_builder.finished_data())?;
+      object.set(key.to_string(), uint8);
+      value.packages.clear();
+      value.flat_builder.reset();
     }
 
     self.network_bus.clear_packages();

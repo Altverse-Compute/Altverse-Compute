@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 #[derive(Clone)]
 pub enum Role {
   User = 0,
@@ -29,13 +27,13 @@ pub struct PackedArea {
 pub enum Package {
   NewPlayer(u64),
   ClosePlayer(u64),
-  Players(HashMap<u32, u64>),
+  Players(Vec<u64>),
   UpdatePlayers(Vec<u64>),
-  Myself(i64),
+  Myself(u64),
 
-  NewEntities(Vec<u64>),
-  UpdateEntities(Vec<u64>),
-  CloseEntities(Vec<u64>),
+  NewEntities((Vec<u64>, String, usize)),
+  UpdateEntities((Vec<u64>, String, usize)),
+  CloseEntities((Vec<u64>, String, usize)),
 
   AreaInit(PackedArea),
   Chat(Chat),

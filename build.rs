@@ -23,18 +23,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   if !status.success() {
     panic!("flatc failed");
   }
-
-  let proto_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto");
-
-  println!("cargo:rerun-if-changed={}", proto_dir.display());
-
-  let status = Command::new("buf")
-    .arg("generate")
-    .current_dir(&proto_dir)
-    .status()?;
-
-  if !status.success() {
-    panic!("buf generate failed");
-  }
   Ok(())
 }

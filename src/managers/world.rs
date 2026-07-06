@@ -15,7 +15,7 @@ pub struct WorldsManager {
   pub old_entities: Vec<u64>,
   pub entities_diff: Vec<u64>,
   pub spawned_entities: Vec<u64>,
-  pub entities_to_remove: Vec<u32>,
+  pub entities_to_remove: Vec<u64>,
 }
 
 pub enum Change {
@@ -80,7 +80,7 @@ impl WorldsManager {
 
         area.entities.retain(|id, entity| {
           if entity.entity().to_remove {
-            self.entities_to_remove.push(*id as u32);
+            self.entities_to_remove.push(*id);
             false
           } else {
             true
@@ -125,34 +125,36 @@ impl WorldsManager {
 
         for entity in event_bus.entities_to_spawn.iter() {
           let id = area.add_entity(entity.clone());
-          self.spawned_entities.insert(id as usize, entity.pack());
+          self.spawned_entities.push(id);
         }
 
         self.new_entities = area.get_packed_entities();
 
-        for (id, entity) in self.new_entities.iter() {
-          if let Some(old_entity) = self.old_entities.get(&id) {
-            let (diff, changed) = old_entity.diff(&entity);
-            if changed {
-              self.entities_diff.insert(*id, diff);
+        for id in self.new_entities.iter() {
+          if let Some(entity) = area.entities.get(id) {
+            if !entity.get_changes().is_empty() {
+              self.entities_diff.push(*id);
             }
           }
         }
 
         if !self.spawned_entities.is_empty() {
-          let package = Package::NewEntities(self.spawned_entities.clone());
+          let package =
+            Package::NewEntities((self.spawned_entities.clone(), name.clone(), index.clone()));
           network_bus.add_area_package(name.clone(), index as u64, package.clone());
           self.spawned_entities.clear();
         }
 
         if !self.entities_to_remove.is_empty() {
-          let package = Package::CloseEntities(self.entities_to_remove.clone());
+          let package =
+            Package::CloseEntities((self.entities_to_remove.clone(), name.clone(), index.clone()));
           network_bus.add_area_package(name.clone(), index as u64, package.clone());
           self.entities_to_remove.clear();
         }
 
         if !self.entities_diff.is_empty() {
-          let package = Package::UpdateEntities(self.entities_diff.clone());
+          let package =
+            Package::UpdateEntities((self.entities_diff.clone(), name.clone(), index.clone()));
           network_bus.add_area_package(name.clone(), index as u64, package.clone());
           self.entities_diff.clear();
         }
