@@ -7,7 +7,7 @@ use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdat
 #[derive(Clone)]
 pub struct Draining {
   entity: Entity,
-  players_in_aura: Vec<i64>,
+  players_in_aura: Vec<u64>,
 }
 
 impl Draining {

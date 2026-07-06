@@ -5,7 +5,7 @@ use crate::resources::{distance, EffectUpdateProps};
 
 #[derive(Clone, Debug)]
 pub struct PlayerSlow {
-  pub target_speed: f64,
+  pub target_speed: f32,
   pub effect: PlayerEffect,
 }
 

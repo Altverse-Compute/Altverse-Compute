@@ -7,9 +7,9 @@ use crate::resources::{random, AdditionalEntityProps, EntityProps, EntityUpdateP
 #[derive(Clone)]
 pub struct Drop {
   entity: Entity,
-  time_at_some_surface: f64,
-  speed_time: f64,
-  start_time: f64,
+  time_at_some_surface: f32,
+  speed_time: f32,
+  start_time: f32,
   spawned: bool,
 }
 
@@ -76,7 +76,7 @@ impl EntityLogic for Drop {
     self.collide();
 
     if self.time_at_some_surface > 0.0 {
-      self.time_at_some_surface -= props.delta as f64;
+      self.time_at_some_surface -= props.delta as f32;
       self.entity.vel.y = 0.0;
       self.entity.alpha = 1.0 - self.time_at_some_surface / self.start_time;
       self.entity.harmless = true;
@@ -92,12 +92,12 @@ impl EntityLogic for Drop {
       self.entity.vel.y = 0.0;
       self.entity.alpha = -self.time_at_some_surface / self.start_time;
       self.entity.changed_alpha();
-      self.time_at_some_surface += props.delta as f64;
+      self.time_at_some_surface += props.delta as f32;
       if self.time_at_some_surface >= 0.0 {
         self.re_spawn();
       }
     } else {
-      self.speed_time -= props.delta as f64;
+      self.speed_time -= props.delta as f32;
       if self.spawned {
         self.entity.vel.y = self.entity.speed;
       } else {

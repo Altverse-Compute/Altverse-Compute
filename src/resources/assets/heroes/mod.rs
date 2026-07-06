@@ -1,4 +1,3 @@
-use crate::proto::PackedPlayer;
 use crate::resources::player::{Player, PlayerField};
 use crate::resources::utils::input::Input;
 use crate::resources::{Boundary, PlayerUpdateProps};

@@ -8,7 +8,7 @@ use crate::resources::{distance, random, AdditionalEntityProps, EntityProps, Ent
 #[derive(Clone)]
 pub struct Sniper {
   entity: Entity,
-  timer: f64,
+  timer: f32,
 }
 
 impl Sniper {
@@ -27,7 +27,7 @@ impl EntityLogic for Sniper {
     self.entity.update(props);
     self.entity.collide();
 
-    self.timer += props.delta as f64;
+    self.timer += props.delta;
 
     if self.timer > 3000.0 {
       let mut target: Option<&&Player> = None;

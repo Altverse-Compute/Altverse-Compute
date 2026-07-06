@@ -6,7 +6,7 @@ use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdat
 #[derive(Clone)]
 pub struct Cloud {
   entity: Entity,
-  time_fix: f64,
+  time_fix: f32,
 }
 
 impl Cloud {
@@ -45,7 +45,7 @@ impl EntityLogic for Cloud {
             player.pos.y - self.entity.pos.y,
           );
           let attract_amplitude = 2 ^ -(dist / 120.0) as i32;
-          let move_dist = (3 * attract_amplitude) as f64;
+          let move_dist = (3 * attract_amplitude) as f32;
           let angle = dy.atan2(dx);
           player.pos.x += move_dist * angle.cos() * self.time_fix;
           player.pos.y += move_dist * angle.sin() * self.time_fix;

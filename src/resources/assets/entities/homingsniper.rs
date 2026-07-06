@@ -8,11 +8,11 @@ use crate::resources::{distance, random, AdditionalEntityProps, EntityProps, Ent
 #[derive(Clone)]
 pub struct HomingSniper {
   entity: Entity,
-  timer: f64,
+  timer: f32,
 }
 
-const MAX_DIST: f64 = 5.625 * 32.0;
-const ANGLE_INCREMENT: f64 = 0.04;
+const MAX_DIST: f32 = 5.625 * 32.0;
+const ANGLE_INCREMENT: f32 = 0.04;
 
 impl HomingSniper {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
@@ -30,7 +30,7 @@ impl EntityLogic for HomingSniper {
     self.entity.update(props);
     self.entity.collide();
 
-    self.timer += props.delta as f64;
+    self.timer += props.delta;
 
     if self.timer > 3000.0 {
       let mut target: Option<&&Player> = None;
@@ -158,9 +158,9 @@ impl EntityLogic for HomingBullet {
       self.entity.vel_to_angle();
       if angle_diff.abs() >= ANGLE_INCREMENT {
         if angle_diff < 0.0 {
-          self.entity.angle -= ANGLE_INCREMENT * (props.delta as f64 / 30.0);
+          self.entity.angle -= ANGLE_INCREMENT * (props.delta / 30.0);
         } else {
-          self.entity.angle += ANGLE_INCREMENT * (props.delta as f64 / 30.0);
+          self.entity.angle += ANGLE_INCREMENT * (props.delta / 30.0);
         }
         self.entity.angle_to_vel();
       }

@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 pub struct Area {
   pub entities: HashMap<u64, EntityWrapper>,
-  pub players_id: Vec<i64>,
+  pub players_id: Vec<u64>,
   pub raw_area: RawArea,
   pub next_id: u64,
 }
@@ -22,25 +22,25 @@ impl Area {
     }
   }
 
-  pub fn join(&mut self, id: i64) {
+  pub fn join(&mut self, id: u64) {
     if self.players_id.len() == 0 {
       self.init();
     }
     self.players_id.push(id);
   }
 
-  pub fn leave(&mut self, id: i64) {
+  pub fn leave(&mut self, id: u64) {
     self.players_id.retain(|&item| item != id);
     if self.players_id.len() == 0 {
       self.entities.clear();
     }
   }
 
-  pub fn get_packed_entities(&self) -> HashMap<u64, &EntityWrapper> {
-    let mut packed_entities: HashMap<u64, &EntityWrapper> = HashMap::new();
+  pub fn get_packed_entities(&self) -> Vec<u64> {
+    let mut packed_entities = Vec::new();
 
     for (id, entity) in self.entities.iter() {
-      packed_entities.insert(*id, entity);
+      packed_entities.push(*id);
     }
 
     packed_entities
@@ -75,7 +75,7 @@ impl Area {
           };
           let type_name = entity
             .types
-            .get(random(0.0, entity.types.len() as f64 - 1.0).round() as usize)
+            .get(random(0.0, entity.types.len() as f32 - 1.0).round())
             .unwrap();
           let additional = AdditionalEntityProps {
             count: entity.count as u64,
@@ -104,7 +104,7 @@ impl Area {
     self.next_id
   }
 
-  pub fn get_players_vec<'a>(&self, players: &'a HashMap<i64, HeroWrapper>) -> Vec<&'a Player> {
+  pub fn get_players_vec<'a>(&self, players: &'a HashMap<u64, HeroWrapper>) -> Vec<&'a Player> {
     let mut arr = Vec::new();
 
     for id in &self.players_id {

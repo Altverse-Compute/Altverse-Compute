@@ -6,7 +6,7 @@ use crate::resources::{random, AdditionalEntityProps, EntityProps, EntityUpdateP
 #[derive(Clone)]
 pub struct Icicle {
   entity: Entity,
-  timer: i64,
+  timer: f32,
   wall_hit: bool,
 }
 
@@ -20,7 +20,7 @@ impl Icicle {
     Self {
       entity,
       wall_hit: false,
-      timer: 0,
+      timer: 0.0,
     }
   }
 
@@ -58,8 +58,8 @@ impl EntityLogic for Icicle {
     if self.wall_hit {
       self.timer += props.delta;
       self.entity.friction = 1.0;
-      if self.timer > 2500 {
-        self.timer = 0;
+      if self.timer > 2500.0 {
+        self.timer = 0.0;
         self.wall_hit = false;
         self.entity.friction = 0.0;
         self.entity.angle_to_vel();

@@ -6,8 +6,8 @@ use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdat
 #[derive(Clone)]
 pub struct StormCloud {
   entity: Entity,
-  time_fix: f64,
-  timer: f64,
+  time_fix: f32,
+  timer: f32,
 }
 
 impl StormCloud {
@@ -28,7 +28,7 @@ impl EntityLogic for StormCloud {
     self.entity.update(props);
     self.entity.collide();
     self.time_fix = props.time_fix;
-    self.timer = (self.timer % 2000.0) + props.delta as f64;
+    self.timer = (self.timer % 2000.0) + props.delta;
     self.entity.alpha = ((self.timer / 1000.0).sin()).abs();
     self.entity.changed_alpha();
   }
@@ -49,7 +49,7 @@ impl EntityLogic for StormCloud {
           player.pos.y - self.entity.pos.y,
         );
         let attract_amplitude = 2 ^ -(dist / 120.0) as i32;
-        let move_dist = (3 * attract_amplitude) as f64;
+        let move_dist = (3 * attract_amplitude) as f32;
         let angle = dy.atan2(dx);
         player.pos.x += move_dist * angle.cos() * self.time_fix;
         player.pos.y += move_dist * angle.sin() * self.time_fix;

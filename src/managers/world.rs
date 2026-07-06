@@ -1,9 +1,8 @@
 use crate::bus::{EventBus, NetworkBus};
 use crate::config::Config;
+use crate::fbs::Package;
 use crate::managers::player::PlayersManager;
 use crate::props::EngineProps;
-use crate::proto::package::Kind;
-use crate::proto::{CloseEntities, Entities, Players, UpdateEntitiesMap};
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
 use crate::resources::world::World;
@@ -56,7 +55,7 @@ impl WorldsManager {
         let mut entity_update = EntityUpdateProps {
           delta: props.delta,
           time_fix: props.time_fix,
-          players: area.get_players_vec(&players_clone),
+          players: area.get_players_vec(players_clone),
           event_bus,
         };
 
@@ -94,7 +93,7 @@ impl WorldsManager {
 
         for (_, entity) in area.entities.iter_mut() {
           for id in &area.players_id {
-            if let Some(player) = players.get_mut(&id) {
+            if let Some(player) = players.get_mut(id) {
               entity.interact(player);
             }
           }
@@ -126,7 +125,7 @@ impl WorldsManager {
 
         for entity in event_bus.entities_to_spawn.iter() {
           let id = area.add_entity(entity.clone());
-          self.spawned_entities.insert(id as u32, entity.pack());
+          self.spawned_entities.insert(id as usize, entity.pack());
         }
 
         self.new_entities = area.get_packed_entities();
@@ -135,31 +134,25 @@ impl WorldsManager {
           if let Some(old_entity) = self.old_entities.get(&id) {
             let (diff, changed) = old_entity.diff(&entity);
             if changed {
-              self.entities_diff.insert(*id as u32, diff);
+              self.entities_diff.insert(*id, diff);
             }
           }
         }
 
         if !self.spawned_entities.is_empty() {
-          let package = Kind::NewEntities(Entities {
-            entities: self.spawned_entities.clone(),
-          });
+          let package = Package::NewEntities(self.spawned_entities.clone());
           network_bus.add_area_package(name.clone(), index as u64, package.clone());
           self.spawned_entities.clear();
         }
 
         if !self.entities_to_remove.is_empty() {
-          let package = Kind::CloseEntities(CloseEntities {
-            ids: self.entities_to_remove.clone(),
-          });
+          let package = Package::CloseEntities(self.entities_to_remove.clone());
           network_bus.add_area_package(name.clone(), index as u64, package.clone());
           self.entities_to_remove.clear();
         }
 
         if !self.entities_diff.is_empty() {
-          let package = Kind::UpdateEntities(UpdateEntitiesMap {
-            items: self.entities_diff.clone(),
-          });
+          let package = Package::UpdateEntities(self.entities_diff.clone());
           network_bus.add_area_package(name.clone(), index as u64, package.clone());
           self.entities_diff.clear();
         }
@@ -167,8 +160,8 @@ impl WorldsManager {
     }
   }
 
-  pub fn prepare_warps(&mut self, players: &HashMap<i64, HeroWrapper>) -> HashMap<i64, Change> {
-    let mut changes: HashMap<i64, Change> = HashMap::new();
+  pub fn prepare_warps(&mut self, players: &HashMap<u64, HeroWrapper>) -> HashMap<u64, Change> {
+    let mut changes: HashMap<u64, Change> = HashMap::new();
 
     for (id, hero) in players.iter() {
       let player = hero.player();
@@ -227,11 +220,9 @@ impl WorldsManager {
               player.pos.x = -8.0 * 32.0 + player.radius;
               let next_area = world.areas.get_mut(player.area as usize).unwrap();
               next_area.join(player.id);
-              let area_init_package = Kind::AreaInit(world.pack_area(player.area as usize));
+              let area_init_package = Package::AreaInit(world.pack_area(player.area as usize));
               network_bus.add_direct_package(*id, area_init_package);
-              let players_package = Kind::Players(Players {
-                players: players_manager.pack_players(),
-              });
+              let players_package = Package::Players(players_manager.pack_players());
               network_bus.add_direct_package(*id, players_package);
             }
           }
@@ -245,11 +236,9 @@ impl WorldsManager {
               prev_area.join(player.id);
 
               player.pos.x = prev_area.raw_area.w + 8.0 * 32.0 - player.radius;
-              let area_init_package = Kind::AreaInit(world.pack_area(player.area as usize));
+              let area_init_package = Package::AreaInit(world.pack_area(player.area as usize));
               network_bus.add_direct_package(*id, area_init_package);
-              let players_package = Kind::Players(Players {
-                players: players_manager.pack_players(),
-              });
+              let players_package = Package::Players(players_manager.pack_players());
               network_bus.add_direct_package(*id, players_package);
             }
           }
@@ -263,11 +252,9 @@ impl WorldsManager {
             player.world = next_world_name;
             player.pos.y = area.raw_area.h - player.radius - 2.0 * 32.0;
             next_world.join(&player);
-            let area_init_package = Kind::AreaInit(next_world.pack_area(player.area as usize));
+            let area_init_package = Package::AreaInit(next_world.pack_area(player.area as usize));
             network_bus.add_direct_package(*id, area_init_package);
-            let players_package = Kind::Players(Players {
-              players: players_manager.pack_players(),
-            });
+            let players_package = Package::Players(players_manager.pack_players());
             network_bus.add_direct_package(*id, players_package);
           }
           Change::PrevWorld => {
@@ -279,11 +266,9 @@ impl WorldsManager {
             player.world = prev_world_name;
             player.pos.y = player.radius + 2.0 * 32.0;
             prev_world.join(&player);
-            let area_init_package = Kind::AreaInit(prev_world.pack_area(player.area as usize));
+            let area_init_package = Package::AreaInit(prev_world.pack_area(player.area as usize));
             network_bus.add_direct_package(*id, area_init_package);
-            let players_package = Kind::Players(Players {
-              players: players_manager.pack_players(),
-            });
+            let players_package = Package::Players(players_manager.pack_players());
             network_bus.add_direct_package(*id, players_package);
           }
         };

@@ -8,26 +8,26 @@ use track_changes_derive::TrackChanges;
 #[derive(Clone, Debug, TrackChanges)]
 pub struct Player {
   pub name: String,
-  pub id: i64,
+  pub id: u64,
   pub(crate) pos: Vector,
-  pub(crate) radius: f64,
+  pub(crate) radius: f32,
   pub vel: Vector,
   acc: Vector,
   slide: Vector,
-  pub speed: f64,
-  pub energy: f64,
-  pub max_energy: f64,
+  pub speed: f32,
+  pub energy: f32,
+  pub max_energy: f32,
   pub downed: bool,
-  pub regeneration: f64,
+  pub regeneration: f32,
   pub world: String,
   pub area: u64,
   #[track(skip)]
-  angle: f64,
-  pub death_timer: f64,
+  angle: f32,
+  pub death_timer: f32,
 
   pub immortal: bool,
-  pub state: u64,
-  pub state_meta: f64,
+  pub state: u8,
+  pub state_meta: f32,
   #[track(skip)]
   pub to_delete: bool,
   pub hero: u32,
@@ -100,7 +100,7 @@ impl Player {
 
     self.regenerate_energy(props.delta);
     if self.downed {
-      self.death_timer -= props.delta as f64 / 1000.0;
+      self.death_timer -= props.delta as f32 / 1000.0;
       if self.death_timer < 0.0 {
         self.to_delete = true;
       }
@@ -117,7 +117,7 @@ impl Player {
   }
 
   fn regenerate_energy(&mut self, delta: i64) {
-    self.energy += self.regeneration * (delta as f64 / 1000.0);
+    self.energy += self.regeneration * (delta as f32 / 1000.0);
     if self.energy > self.max_energy {
       self.energy = self.max_energy;
     }
@@ -125,7 +125,7 @@ impl Player {
   }
 
   pub fn input(&mut self, input: &mut Input) {
-    let shift: f64 = if input.shift { 0.5 } else { 1.0 };
+    let shift: f32 = if input.shift { 0.5 } else { 1.0 };
 
     if input.left {
       self.acc.x = -self.speed * shift;

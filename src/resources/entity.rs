@@ -9,28 +9,28 @@ pub struct Entity {
   #[track(skip)]
   pub id: u64,
   pub type_id: u64,
-  pub radius: f64,
-  pub speed: f64,
+  pub radius: f32,
+  pub speed: f32,
   pub harmless: bool,
   #[track(skip)]
   pub immune: bool,
   #[track(skip)]
-  pub angle: f64,
+  pub angle: f32,
   pub pos: Vector,
   #[track(skip)]
   pub vel: Vector,
   #[track(skip)]
   pub to_remove: bool,
   #[track(skip)]
-  pub friction: f64,
+  pub friction: f32,
   #[track(skip)]
-  pub aura: f64,
+  pub aura: f32,
   #[track(skip)]
   pub boundary: Boundary,
 
-  pub state: u64,
-  pub state_metadata: f64,
-  pub alpha: f64,
+  pub state: u8,
+  pub state_metadata: f32,
+  pub alpha: f32,
 
   pub changes: Vec<EntityField>,
 }
@@ -51,7 +51,7 @@ impl Entity {
         props.boundary.x + props.boundary.w,
         props.boundary.y + props.boundary.h,
       ),
-      vel: Vector::from_angle(angle * PI as f64 * 2.0, props.speed),
+      vel: Vector::from_angle(angle * PI * 2.0, props.speed),
       harmless: false,
       to_remove: false,
       friction: 0.0,
@@ -70,7 +70,7 @@ impl Entity {
     self.movement(props.time_fix);
   }
 
-  pub fn movement(&mut self, time_fix: f64) {
+  pub fn movement(&mut self, time_fix: f32) {
     self.pos.x += self.vel.x * time_fix;
     self.pos.y += self.vel.y * time_fix;
     self.changed_pos();

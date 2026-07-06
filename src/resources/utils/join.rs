@@ -4,13 +4,13 @@ use napi_derive::napi;
 #[derive(Clone)]
 pub struct JoinProps {
   pub name: String,
-  pub id: i64,
+  pub id: u64,
 }
 
 #[napi]
 impl JoinProps {
   #[napi(constructor)]
-  pub fn new(name: String, id: i64) -> JoinProps {
+  pub fn new(name: String, id: u64) -> JoinProps {
     JoinProps { name, id }
   }
 }

@@ -1,17 +1,40 @@
 use std::path::PathBuf;
+use std::process::Command;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   napi_build::setup();
 
-  let proto_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto/proto");
-  let proto_file = proto_dir.join("game.proto");
+  let schema_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto/flat");
+
+  let schema_file = schema_dir.join("game.fbs");
+
+  println!("cargo:rerun-if-changed={}", schema_dir.display());
+  println!("cargo:rerun-if-changed={}", schema_file.display());
+
+  let out_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto/generated/flat");
+
+  let status = Command::new("flatc")
+    .arg("--rust")
+    .arg("-o")
+    .arg(&out_dir)
+    .arg(&schema_file)
+    .status()?;
+
+  if !status.success() {
+    panic!("flatc failed");
+  }
+
+  let proto_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto");
 
   println!("cargo:rerun-if-changed={}", proto_dir.display());
-  println!("cargo:rerun-if-changed={}", proto_file.display());
 
-  let mut config = prost_build::Config::new();
+  let status = Command::new("buf")
+    .arg("generate")
+    .current_dir(&proto_dir)
+    .status()?;
 
-  config.compile_protos(&[proto_file], &[proto_dir])?;
-
+  if !status.success() {
+    panic!("buf generate failed");
+  }
   Ok(())
 }

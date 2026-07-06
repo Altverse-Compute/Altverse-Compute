@@ -34,7 +34,7 @@ impl EntityLogic for Fade {
     let period = MAX_TIME;
 
     let phase = (self.timer / period) * std::f64::consts::TAU;
-    self.entity.alpha = (phase.cos() + 1.0) * 0.5;
+    self.entity.alpha = ((phase.cos() + 1.0) * 0.5) as f32;
     self.entity.harmless = self.entity.alpha < 0.5;
     self.entity.changed_alpha();
     self.entity.changed_harmless();

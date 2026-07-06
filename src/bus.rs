@@ -14,7 +14,7 @@ pub struct Client {
 }
 
 pub struct NetworkBus {
-  pub direct_clients: HashMap<i64, Client>,
+  pub direct_clients: HashMap<u64, Client>,
   pub area_clients: HashMap<(String, u64), Vec<Package>>,
 }
 
@@ -26,7 +26,7 @@ impl NetworkBus {
     }
   }
 
-  pub fn add_client(&mut self, player_id: i64) {
+  pub fn add_client(&mut self, player_id: u64) {
     self.direct_clients.insert(
       player_id,
       Client {
@@ -37,13 +37,13 @@ impl NetworkBus {
     );
   }
 
-  pub fn remove_client(&mut self, player_id: i64) {
+  pub fn remove_client(&mut self, player_id: u64) {
     if let Some(_) = self.direct_clients.get(&player_id) {
       self.direct_clients.remove(&player_id);
     }
   }
 
-  pub fn accept_input(&mut self, id: i64, input: &Input) {
+  pub fn accept_input(&mut self, id: u64, input: &Input) {
     if let Some(client) = self.direct_clients.get_mut(&id) {
       client.input = input.clone();
     }
@@ -63,7 +63,7 @@ impl NetworkBus {
     }
   }
 
-  pub fn add_direct_package(&mut self, id: i64, package: Package) {
+  pub fn add_direct_package(&mut self, id: u64, package: Package) {
     if let Some(client) = self.direct_clients.get_mut(&id) {
       client.packages.push(package);
     }
@@ -79,11 +79,11 @@ impl NetworkBus {
 #[derive(Clone)]
 pub enum PlayerEvent {
   ResPlayerAndMove {
-    player_id: i64,
+    player_id: u64,
     pos: Vector,
   },
   AddEffect {
-    player_id: i64,
+    player_id: u64,
     effect_id: u64,
     caster_id: u64,
   },
@@ -106,7 +106,7 @@ impl EventBus {
     self.entities_to_spawn.push(entity);
   }
 
-  pub fn respawn_player_and_move(&mut self, player_id: i64, pos: Vector) {
+  pub fn respawn_player_and_move(&mut self, player_id: u64, pos: Vector) {
     self
       .players_events
       .push(PlayerEvent::ResPlayerAndMove { player_id, pos });

@@ -8,21 +8,21 @@ pub struct Config {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Spawn {
-  pub radius: f64,
-  pub speed: f64,
-  pub max_speed: f64,
-  pub regeneration: f64,
-  pub energy: f64,
-  pub max_energy: f64,
+  pub radius: f32,
+  pub speed: f32,
+  pub max_speed: f32,
+  pub regeneration: f32,
+  pub energy: f32,
+  pub max_energy: f32,
   pub world: String,
-  pub area: i64,
+  pub area: u32,
 
-  pub sx: f64,
-  pub sy: f64,
-  pub ex: f64,
-  pub ey: f64,
+  pub sx: f32,
+  pub sy: f32,
+  pub ex: f32,
+  pub ey: f32,
 
-  pub died_timer: f64,
+  pub died_timer: f32,
 }
 
 impl Config {
@@ -57,14 +57,14 @@ pub struct RawWorld {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RawArea {
   pub enemies: Vec<RawEntity>,
-  pub w: f64,
-  pub h: f64,
+  pub w: f32,
+  pub h: f32,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RawEntity {
   pub types: Vec<String>,
-  pub radius: f64,
-  pub speed: f64,
+  pub radius: f32,
+  pub speed: f32,
   pub count: u32,
 }

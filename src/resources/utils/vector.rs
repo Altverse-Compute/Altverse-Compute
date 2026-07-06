@@ -4,12 +4,12 @@ use napi_derive::napi;
 #[derive(Clone, Debug)]
 #[napi]
 pub struct Vector {
-  pub x: f64,
-  pub y: f64,
+  pub x: f32,
+  pub y: f32,
 }
 
 impl Vector {
-  pub fn new(x: Option<f64>, y: Option<f64>) -> Self {
+  pub fn new(x: Option<f32>, y: Option<f32>) -> Self {
     Self {
       x: match x {
         Some(x) => x,
@@ -22,21 +22,21 @@ impl Vector {
     }
   }
 
-  pub fn from_mult(vec: Vector, mult: f64) -> Self {
+  pub fn from_mult(vec: Vector, mult: f32) -> Self {
     Self {
       x: vec.x * mult,
       y: vec.y * mult,
     }
   }
 
-  pub fn rand(xs: f64, ys: f64, xe: f64, ye: f64) -> Self {
+  pub fn rand(xs: f32, ys: f32, xe: f32, ye: f32) -> Self {
     Self {
-      x: random(xs, xe),
-      y: random(ys, ye),
+      x: random(xs as f64, xe as f64) as f32,
+      y: random(ys as f64, ye as f64) as f32,
     }
   }
 
-  pub fn from_angle(angle: f64, multi: f64) -> Self {
+  pub fn from_angle(angle: f32, multi: f32) -> Self {
     Self {
       x: angle.cos() * multi,
       y: angle.sin() * multi,

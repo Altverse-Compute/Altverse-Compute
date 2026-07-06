@@ -7,11 +7,11 @@ use crate::resources::{distance, random, AdditionalEntityProps, EntityProps, Ent
 #[derive(Clone)]
 pub struct Leaf {
   entity: Entity,
-  time_spawn: f64,
-  remove_time: f64,
+  time_spawn: f32,
+  remove_time: f32,
   remove: bool,
-  start_radius: f64,
-  players: Vec<i64>,
+  start_radius: f32,
+  players: Vec<u64>,
 }
 
 impl Leaf {
@@ -53,8 +53,8 @@ impl EntityLogic for Leaf {
     self.entity.collide();
 
     if self.time_spawn > 0.0 {
-      self.time_spawn -= props.delta as f64;
-      self.entity.radius = self.start_radius * 2.0 * 0.5_f64.max(self.time_spawn / 1000.0);
+      self.time_spawn -= props.delta;
+      self.entity.radius = self.start_radius * 2.0 * 0.5.max(self.time_spawn / 1000.0);
       self.entity.alpha = 1.0 - self.time_spawn / 1000.0;
       self.entity.changed_alpha();
       self.entity.changed_radius();

@@ -4,8 +4,8 @@ use crate::resources::entity::{Entity, EntityField};
 use crate::resources::player::Player;
 use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdateProps};
 
-const MAX_DIST: f64 = 5.625 * 32.0;
-const ANGLE_INCREMENT: f64 = 0.04;
+const MAX_DIST: f32 = 5.625 * 32.0;
+const ANGLE_INCREMENT: f32 = 0.04;
 
 #[derive(Clone)]
 pub struct Homing {
@@ -49,9 +49,9 @@ impl EntityLogic for Homing {
       self.entity.vel_to_angle();
       if angle_diff.abs() >= ANGLE_INCREMENT {
         if angle_diff < 0.0 {
-          self.entity.angle -= ANGLE_INCREMENT * (props.delta as f64 / 30.0);
+          self.entity.angle -= ANGLE_INCREMENT * (props.delta / 30.0);
         } else {
-          self.entity.angle += ANGLE_INCREMENT * (props.delta as f64 / 30.0);
+          self.entity.angle += ANGLE_INCREMENT * (props.delta / 30.0);
         }
         self.entity.angle_to_vel();
       }

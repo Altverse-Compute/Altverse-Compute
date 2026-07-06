@@ -5,12 +5,12 @@ use crate::resources::player::Player;
 pub struct PlayerEffect {
   pub to_remove: bool,
   pub id: u64,
-  pub target_id: i64,
+  pub target_id: u64,
   pub caster_id: u64,
 }
 
 impl PlayerEffect {
-  pub fn new(id: u64, target_id: i64, caster_id: u64) -> Self {
+  pub fn new(id: u64, target_id: u64, caster_id: u64) -> Self {
     Self {
       to_remove: false,
       id,

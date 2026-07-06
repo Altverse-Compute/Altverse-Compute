@@ -48,7 +48,7 @@ impl Hero for Maven {
     }
 
     if self.first_ability_active {
-      self.player.energy -= (props.delta as f64 / 1000.0) * 24.0;
+      self.player.energy -= (props.delta as f32 / 1000.0) * 24.0;
       if self.player.energy <= 0.0 {
         self.first_ability_active = false;
         self.player.energy = 0.0;

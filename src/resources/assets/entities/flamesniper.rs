@@ -9,7 +9,7 @@ use crate::resources::{distance, random, AdditionalEntityProps, EntityProps, Ent
 #[derive(Clone)]
 pub struct FlameSniper {
   entity: Entity,
-  timer: f64,
+  timer: f32,
 }
 impl FlameSniper {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
@@ -27,7 +27,7 @@ impl EntityLogic for FlameSniper {
     self.entity.update(props);
     self.entity.collide();
 
-    self.timer += props.delta as f64;
+    self.timer += props.delta;
 
     if self.timer > 6000.0 {
       let mut target: Option<&&Player> = None;
@@ -102,7 +102,7 @@ impl EntityLogic for FlameSniper {
 #[derive(Clone)]
 pub struct FlameBullet {
   pub entity: Entity,
-  timer: f64,
+  timer: f32,
 }
 
 impl FlameBullet {
@@ -142,7 +142,7 @@ impl EntityLogic for FlameBullet {
     self.entity.update(props);
     FlameBullet::collide(&mut self.entity);
 
-    self.timer += props.delta as f64;
+    self.timer += props.delta;
     if self.timer >= 32.0 * ((self.entity.radius * 2.0) / self.entity.speed) {
       let mut trail = FlameTrail::new(
         EntityProps {

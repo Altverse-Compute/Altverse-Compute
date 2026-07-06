@@ -1,11 +1,10 @@
 // #[deny(clippy::all)]
 use crate::bus::{EventBus, NetworkBus};
 use crate::config::Config;
+use crate::fbs::{Chat, Package, Role};
 use crate::managers::player::PlayersManager;
 use crate::managers::world::WorldsManager;
 use crate::props::EngineProps;
-use crate::proto::package::Kind;
-use crate::proto::{Chat, Package, Role};
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::UpdateProps;
@@ -21,10 +20,11 @@ use std::collections::HashMap;
 use std::io;
 use std::sync::Mutex;
 
-pub mod proto {
-  include!(concat!(env!("OUT_DIR"), "/game.rs"));
+pub mod flat {
+  include!("proto/generated/game_generated.rs");
 }
 
+mod builder;
 mod bus;
 mod config;
 mod fbs;
@@ -45,12 +45,12 @@ pub struct ComputeEngine {
   proto_buffer: Vec<u8>,
 
   last_timestamp: i64,
-  player_death_callback: Option<Function<'static, i64, Null>>,
+  player_death_callback: Option<Function<'static, u64, Null>>,
 }
 
-#[napi]
+// #[napi]
 impl ComputeEngine {
-  #[napi(constructor)]
+  // #[napi(constructor)]
   pub fn new(props: &EngineProps) -> Result<Self, Error> {
     // let worlds = props.load_worlds()?;
     let config = props.load_config()?;
@@ -68,7 +68,7 @@ impl ComputeEngine {
     })
   }
 
-  #[napi]
+  // #[napi]
   pub fn join(&mut self, player_props: &JoinProps) -> Result<(), Error> {
     self.network_bus.add_client(player_props.id);
     self.players_manager.join(
@@ -79,8 +79,8 @@ impl ComputeEngine {
     Ok(())
   }
 
-  #[napi]
-  pub fn leave(&mut self, player_id: i64) {
+  // #[napi]
+  pub fn leave(&mut self, player_id: u64) {
     self.players_manager.leave(
       player_id,
       &mut self.worlds_manager.worlds,
@@ -89,41 +89,40 @@ impl ComputeEngine {
     self.network_bus.remove_client(player_id);
   }
 
-  #[napi]
-  pub fn chat_message(&mut self, content: String, id: u32) {
-    if let Some(hero) = self.players_manager.get_player(id as i64) {
-      self.network_bus.add_global_package(Kind::ChatMessage(Chat {
+  // #[napi]
+  pub fn chat_message(&mut self, content: String, id: u64) {
+    if let Some(hero) = self.players_manager.get_player(id as u64) {
+      self.network_bus.add_global_package(Package::Chat(Chat {
         id,
         content,
         author: hero.player().name.clone(),
-        role: 0,
+        role: Role::User,
         world: hero.player().world.clone(),
       }))
     }
   }
 
-  #[napi]
-  pub fn input(&mut self, id: i64, input: &Input) {
+  // #[napi]
+  pub fn input(&mut self, id: u64, input: &Input) {
     self.network_bus.accept_input(id, input);
   }
 
-  #[napi]
-  pub fn on_player_death(&mut self, callback: Function<'static, i64, Null>) {
+  // #[napi]
+  pub fn on_player_death(&mut self, callback: Function<'static, u64, Null>) {
     self.player_death_callback = Some(callback);
   }
 
-  #[napi]
+  // #[napi]
   pub fn update(&mut self, env: &Env) -> Result<Object<'_>, Error> {
     let config = CONFIG.lock().unwrap();
 
     let time = Utc::now().timestamp_millis();
-    let delta = time - self.last_timestamp;
+    let delta = (time - self.last_timestamp) as f32;
     self.last_timestamp = time;
-    let time_fix = delta as f64 / (1000.0 / 30.0);
+    let time_fix = delta as f32 / (1000.0 / 30.0);
 
     let update_props = UpdateProps { delta, time_fix };
 
-    self.players_manager.snapshot_start();
     self.worlds_manager.update(
       &update_props,
       &mut self.players_manager,
@@ -143,8 +142,8 @@ impl ComputeEngine {
 
     if let Some(callback) = self.player_death_callback {
       for id in self.players_manager.check_players_to_remove() {
-        self.leave(id as i64);
-        let _ = callback.call(id as i64);
+        self.leave(id);
+        let _ = callback.call(id);
       }
     }
 

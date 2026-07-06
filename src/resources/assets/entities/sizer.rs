@@ -6,8 +6,8 @@ use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
 #[derive(Clone)]
 pub struct Sizer {
   entity: Entity,
-  min_radius: f64,
-  max_radius: f64,
+  min_radius: f32,
+  max_radius: f32,
   growing: bool,
 }
 
@@ -36,7 +36,7 @@ impl EntityLogic for Sizer {
         self.growing = false;
       }
     } else {
-      self.entity.radius -= ((props.delta as f64 / 30.0) * 0.08) * self.min_radius;
+      self.entity.radius -= ((props.delta / 30.0) * 0.08) * self.min_radius;
       self.entity.changed_radius();
       if self.entity.radius < self.min_radius {
         self.growing = true;
