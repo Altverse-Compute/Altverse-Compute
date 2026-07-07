@@ -1,7 +1,6 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::utils::vector::Vector;
 use crate::resources::{AdditionalEntityProps, Boundary, EntityProps, EntityUpdateProps};
 
@@ -37,36 +36,36 @@ impl Wall {
     entity.immune = true;
 
     let peri = (Wall::perimeter(new_bound) / additional.count as f64) * additional.num as f64
-      + props.boundary.w / 2.0;
+      + props.boundary.w as f64 / 2.0;
     let around = Wall::warp_around(&new_bound, peri);
 
     entity.pos = around.pos;
     if around.dir == 0 {
       entity.vel.y = 0.0;
-      entity.vel.x = entity.speed * dir_act as f64;
+      entity.vel.x = entity.speed * dir_act as f32;
     }
     if around.dir == 1 {
       entity.vel.x = 0.0;
-      entity.vel.y = entity.speed * dir_act as f64;
+      entity.vel.y = entity.speed * dir_act as f32;
     }
     if around.dir == 2 {
       entity.vel.y = 0.0;
-      entity.vel.x = -entity.speed * dir_act as f64;
+      entity.vel.x = -entity.speed * dir_act as f32;
     }
     if around.dir == 3 {
       entity.vel.x = 0.0;
-      entity.vel.y = -entity.speed * dir_act as f64;
+      entity.vel.y = -entity.speed * dir_act as f32;
     }
 
     Self { entity, dir_act }
   }
 
   fn perimeter(area: Boundary) -> f64 {
-    return area.w * 2.0 + area.h * 2.0;
+    return area.w as f64 * 2.0 + area.h as f64 * 2.0;
   }
 
   fn warp_around(bound: &Boundary, length: f64) -> Around {
-    let length = length % (bound.w * 2.0 + bound.h * 2.0);
+    let length: f32 = length as f32 % (bound.w * 2.0 + bound.h * 2.0);
     let mut pos = Vector::new(None, None);
     let mut dir: i64 = 0;
     if length < bound.w {
@@ -94,23 +93,27 @@ impl Wall {
     let entity = &mut self.entity;
     if entity.pos.x - entity.radius < entity.boundary.x {
       entity.pos.x = entity.radius + entity.boundary.x + 1.0;
+      entity.changed_pos();
       entity.vel.x = 0.0;
-      entity.vel.y = -entity.speed * self.dir_act as f64;
+      entity.vel.y = -entity.speed * self.dir_act as f32;
     }
     if entity.pos.x + entity.radius > entity.boundary.x + entity.boundary.w {
       entity.pos.x = entity.boundary.w - entity.radius + entity.boundary.x;
+      entity.changed_pos();
       entity.vel.x = 0.0;
-      entity.vel.y = entity.speed * self.dir_act as f64;
+      entity.vel.y = entity.speed * self.dir_act as f32;
     }
     if entity.pos.y - entity.radius < entity.boundary.y {
       entity.pos.y = entity.radius + entity.boundary.y + 1.0;
+      entity.changed_pos();
       entity.vel.y = 0.0;
-      entity.vel.x = entity.speed * self.dir_act as f64;
+      entity.vel.x = entity.speed * self.dir_act as f32;
     }
     if entity.pos.y + entity.radius > entity.boundary.y + entity.boundary.h {
       entity.pos.y = entity.boundary.h - entity.radius + entity.boundary.y;
+      entity.changed_pos();
       entity.vel.y = 0.0;
-      entity.vel.x = -entity.speed * self.dir_act as f64;
+      entity.vel.x = -entity.speed * self.dir_act as f32;
     }
   }
 }
@@ -125,8 +128,12 @@ impl EntityLogic for Wall {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

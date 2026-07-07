@@ -1,34 +1,38 @@
-use crate::proto::PackedPlayer;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::utils::vector::Vector;
 use crate::resources::{distance, Boundary, PlayerUpdateProps};
 use crate::CONFIG;
+use track_changes_derive::TrackChanges;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, TrackChanges)]
 pub struct Player {
   pub name: String,
-  pub id: i64,
-  pub pos: Vector,
-  pub radius: f64,
+  pub id: u64,
+  pub(crate) pos: Vector,
+  pub(crate) radius: f32,
   pub vel: Vector,
   acc: Vector,
   slide: Vector,
-  pub speed: f64,
-  pub energy: f64,
-  pub max_energy: f64,
+  pub speed: f32,
+  pub energy: f32,
+  pub max_energy: f32,
   pub downed: bool,
-  pub regeneration: f64,
+  pub regeneration: f32,
   pub world: String,
   pub area: u64,
-  angle: f64,
-  pub death_timer: f64,
+  #[track(skip)]
+  angle: f32,
+  pub death_timer: f32,
 
   pub immortal: bool,
-  pub state: u64,
-  pub state_meta: f64,
+  pub state: u8,
+  pub state_meta: f32,
+  #[track(skip)]
   pub to_delete: bool,
   pub hero: u32,
+
+  pub changes: Vec<PlayerField>,
 }
 
 impl Player {
@@ -36,7 +40,7 @@ impl Player {
     let spawn = CONFIG.lock().unwrap().clone().spawn;
     Player {
       name: props.name,
-      id: props.id,
+      id: props.id as u64,
       pos: Vector::rand(spawn.sx, spawn.sy, spawn.ex, spawn.ey),
       radius: spawn.radius,
       vel: Vector::new(None, None),
@@ -56,6 +60,7 @@ impl Player {
       area: spawn.area as u64,
       to_delete: false,
       hero: 0,
+      changes: Vec::new(),
     }
   }
 
@@ -95,11 +100,15 @@ impl Player {
 
     self.regenerate_energy(props.delta);
     if self.downed {
-      self.death_timer -= props.delta as f64 / 1000.0;
+      self.death_timer -= props.delta as f32 / 1000.0;
       if self.death_timer < 0.0 {
         self.to_delete = true;
       }
     }
+
+    self.changed_pos();
+    self.changed_death_timer();
+
     //
     // for effect in self.effects.clone().values_mut() {
     //   effect.disable(self);
@@ -107,15 +116,16 @@ impl Player {
     // self.effects.clear();
   }
 
-  fn regenerate_energy(&mut self, delta: i64) {
-    self.energy += self.regeneration * (delta as f64 / 1000.0);
+  fn regenerate_energy(&mut self, delta: f32) {
+    self.energy += self.regeneration * (delta / 1000.0);
     if self.energy > self.max_energy {
       self.energy = self.max_energy;
     }
+    self.changed_energy();
   }
 
   pub fn input(&mut self, input: &mut Input) {
-    let shift: f64 = if input.shift { 0.5 } else { 1.0 };
+    let shift: f32 = if input.shift { 0.5 } else { 1.0 };
 
     if input.left {
       self.acc.x = -self.speed * shift;
@@ -130,20 +140,20 @@ impl Player {
       self.acc.y = self.speed * shift;
     }
     if input.mouse_enable {
-      let dist = distance(input.mouse_pos_x, input.mouse_pos_y);
-      let mut speed_x = input.mouse_pos_x;
-      let mut speed_y = input.mouse_pos_y;
+      let dist = distance(input.mouse_pos_x as f32, input.mouse_pos_y as f32);
+      let mut speed_x = input.mouse_pos_x as f32;
+      let mut speed_y = input.mouse_pos_y as f32;
 
       if dist > 150.0 {
-        speed_x = input.mouse_pos_x * (150.0 / dist);
-        speed_y = input.mouse_pos_y * (150.0 / dist);
+        speed_x = (input.mouse_pos_x as f32) * (150.0 / dist);
+        speed_y = (input.mouse_pos_y as f32) * (150.0 / dist);
       }
 
       self.angle = speed_y.atan2(speed_x);
 
       let mouse_dist = (input.mouse_pos_x.powf(2.0) + input.mouse_pos_y.powf(2.0))
         .sqrt()
-        .min(150.0);
+        .min(150.0) as f32;
 
       let mut dist_movement = self.speed * shift;
       dist_movement *= mouse_dist / 150.0;
@@ -156,44 +166,59 @@ impl Player {
   pub fn knock(&mut self) {
     self.downed = true;
     self.death_timer = 60.0;
+    self.changed_downed();
+    self.changed_death_timer();
   }
 
   pub fn res(&mut self) {
     self.downed = false;
+    self.changed_downed();
   }
 
   pub fn collide(&mut self, boundary: Boundary) {
     if self.pos.x - self.radius < boundary.x {
       self.pos.x = boundary.x + self.radius;
+      self.changed_pos();
     }
     if self.pos.x + self.radius > boundary.x + boundary.w {
       self.pos.x = boundary.x + boundary.w - self.radius;
+      self.changed_pos();
     }
     if self.pos.y - self.radius < boundary.y {
       self.pos.y = boundary.y + self.radius;
+      self.changed_pos();
     }
     if self.pos.y + self.radius > boundary.y + boundary.h {
       self.pos.y = boundary.y + boundary.h - self.radius;
+      self.changed_pos();
     }
   }
 
-  pub fn pack(&self) -> PackedPlayer {
-    PackedPlayer {
-      id: self.id as u32,
-      name: self.name.clone(),
-      x: (self.pos.x * 2.0).round() as i32,
-      y: (self.pos.y * 2.0).round() as i32,
-      radius: (self.radius * 2.0).round().abs() as u32,
-      speed: (self.speed * 2.0).round().abs() as u32,
-      energy: (self.energy * 2.0).round().abs() as u32,
-      max_energy: (self.max_energy * 2.0).round().abs() as u32,
-      death_timer: self.death_timer.round() as u32,
-      state: self.state as u32,
-      area: self.area as u32,
-      world: self.world.clone(),
-      died: self.downed,
-      state_meta: (self.state_meta * 2.0).round().abs() as u32,
-      hero: self.hero,
-    }
+  pub fn get_changes(&self) -> Vec<PlayerField> {
+    self.changes.clone()
   }
+
+  pub fn clear_changes(&mut self) {
+    self.changes = Vec::new();
+  }
+
+  // pub fn pack(&self) -> PackedPlayer {
+  //   PackedPlayer {
+  //     id: self.id as u32,
+  //     name: self.name.clone(),
+  //     x: (self.pos.x * 2.0).round() as i32,
+  //     y: (self.pos.y * 2.0).round() as i32,
+  //     radius: (self.radius * 2.0).round().abs() as u32,
+  //     speed: (self.speed * 2.0).round().abs() as u32,
+  //     energy: (self.energy * 2.0).round().abs() as u32,
+  //     max_energy: (self.max_energy * 2.0).round().abs() as u32,
+  //     death_timer: self.death_timer.round() as u32,
+  //     state: self.state as u32,
+  //     area: self.area as u32,
+  //     world: self.world.clone(),
+  //     died: self.downed,
+  //     state_meta: (self.state_meta * 2.0).round().abs() as u32,
+  //     hero: self.hero,
+  //   }
+  // }
 }

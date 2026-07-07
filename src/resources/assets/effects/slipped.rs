@@ -1,13 +1,13 @@
 use crate::resources::assets::effects::PlayerEffectLogic;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::effect::PlayerEffect;
-use crate::resources::{distance, EffectUpdateProps};
+use crate::resources::EffectUpdateProps;
 
 #[derive(Clone, Debug)]
 pub struct PlayerSlipped {
   pub effect: PlayerEffect,
-  time: f64,
-  original_speed: f64
+  time: f32,
+  original_speed: f32,
 }
 
 impl PlayerSlipped {
@@ -16,7 +16,7 @@ impl PlayerSlipped {
     let mut s = Self {
       effect: PlayerEffect::new(2, player.id, caster_id),
       time: 100.0,
-      original_speed: player.speed
+      original_speed: player.speed,
     };
     s
   }
@@ -32,7 +32,7 @@ impl PlayerEffectLogic for PlayerSlipped {
   fn update(&mut self, props: &mut EffectUpdateProps<'_>) {
     let target = props.target.player_mut();
     let caster = props.caster.entity();
-    self.time -= props.delta as f64;
+    self.time -= props.delta;
     if self.time < 0.0 {
       self.effect.to_remove = true;
     }

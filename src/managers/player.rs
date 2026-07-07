@@ -1,6 +1,5 @@
 use crate::bus::{EventBus, NetworkBus};
-use crate::proto::package::Kind;
-use crate::proto::{PackedPlayer, PartialPlayer, Players, UpdatePlayersMap};
+use crate::fbs::Package;
 use crate::resources::assets::effect::PlayerEffectWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::utils::join::JoinProps;
@@ -8,15 +7,12 @@ use crate::resources::world::World;
 use crate::resources::{PlayerUpdateProps, UpdateProps};
 use napi::{Error, Status};
 use std::collections::HashMap;
-use crate::resources::player::Player;
 
 pub struct PlayersManager {
-  pub players: HashMap<i64, HeroWrapper>,
-  pub start_packages: HashMap<u32, PackedPlayer>,
-  pub end_packages: HashMap<u32, PackedPlayer>,
-  pub players_diff: HashMap<u32, PartialPlayer>,
-  pub players_to_remove: Vec<u32>,
-  pub effects: HashMap<i64, HashMap<u64, PlayerEffectWrapper>>,
+  pub players: HashMap<u64, HeroWrapper>,
+  pub players_diff: Vec<u64>,
+  pub players_to_remove: Vec<u64>,
+  pub effects: HashMap<u64, HashMap<u64, PlayerEffectWrapper>>,
   pub effects_to_remove: Vec<u64>,
 }
 
@@ -24,9 +20,7 @@ impl PlayersManager {
   pub fn new() -> Self {
     Self {
       players: HashMap::new(),
-      start_packages: HashMap::new(),
-      end_packages: HashMap::new(),
-      players_diff: HashMap::new(),
+      players_diff: Vec::new(),
       players_to_remove: Vec::new(),
       effects_to_remove: Vec::new(),
       effects: HashMap::new(),
@@ -49,19 +43,17 @@ impl PlayersManager {
       if let Some(world) = worlds.get_mut(&world_name) {
         world.join(&player);
 
-        let packed_player = player.pack();
-
-        network_bus.add_global_package(Kind::NewPlayer(packed_player.clone()));
+        network_bus.add_global_package(Package::NewPlayer(player.id));
         network_bus.add_direct_package(
-          player_id,
-          Kind::AreaInit(world.pack_area(player.area as usize)),
+          player.id,
+          Package::AreaInit(world.pack_area(player.area as usize)),
         );
 
         let players = self.pack_players();
 
-        network_bus.add_direct_package(player_id, Kind::Players(Players { players }));
+        network_bus.add_direct_package(player_id, Package::Players(players));
 
-        network_bus.add_direct_package(player_id, Kind::Myself(packed_player.clone()));
+        network_bus.add_direct_package(player_id, Package::Myself(player.id));
 
         return Ok(());
       }
@@ -75,7 +67,7 @@ impl PlayersManager {
 
   pub fn leave(
     &mut self,
-    player_id: i64,
+    player_id: u64,
     worlds: &mut HashMap<String, World>,
     network_bus: &mut NetworkBus,
   ) {
@@ -86,32 +78,20 @@ impl PlayersManager {
       }
       self.players.remove(&player_id);
     }
-    network_bus.remove_client(player_id);
-    network_bus.add_global_package(Kind::ClosePlayer(player_id));
-  }
-
-  pub fn snapshot_start(&mut self) {
-    self.start_packages = self.pack_players();
+    network_bus.add_global_package(Package::ClosePlayer(player_id));
   }
 
   pub fn snapshot_end(&mut self, network_bus: &mut NetworkBus) {
-    self.end_packages = self.pack_players();
     self.players_diff.clear();
-
-    for (id, player) in self.end_packages.iter() {
-      if let Some(old_player) = self.start_packages.get(&id) {
-        let (diff, changed) = old_player.diff(&player);
-        if changed {
-          self.players_diff.insert(*id, diff);
-        }
+    for (index, hero) in self.players.iter() {
+      if !hero.get_changes().is_empty() {
+        self.players_diff.push(*index);
       }
     }
-
     if !self.players_diff.is_empty() {
-      network_bus.add_global_package(Kind::UpdatePlayers(UpdatePlayersMap {
-        items: self.players_diff.clone(),
-      }))
+      network_bus.add_global_package(Package::UpdatePlayers(self.players_diff.clone()));
     }
+    self.players_diff.clear();
   }
 
   pub fn update_behavior(
@@ -160,7 +140,7 @@ impl PlayersManager {
   pub fn add_player_effect(&mut self, effect: &mut PlayerEffectWrapper) {
     if !self.has_player_effect(effect.effect_id(), effect.effect().target_id) {
       if let Some(player) = self.players.get_mut(&effect.effect().target_id) {
-        if let Some(effects) = self.effects.get_mut(&(effect.effect().target_id as i64)) {
+        if let Some(effects) = self.effects.get_mut(&(effect.effect().target_id)) {
           effect.enable(player);
           effects.insert(effect.effect_id(), effect.clone());
         } else {
@@ -173,7 +153,7 @@ impl PlayersManager {
     }
   }
 
-  pub fn has_player_effect(&mut self, self_id: u64, target_id: i64) -> bool {
+  pub fn has_player_effect(&mut self, self_id: u64, target_id: u64) -> bool {
     if let Some(effects) = self.effects.get(&target_id) {
       if let Some(_) = effects.get(&self_id) {
         return true;
@@ -182,12 +162,12 @@ impl PlayersManager {
     false
   }
 
-  pub fn check_players_to_remove(&mut self) -> Vec<u32> {
+  pub fn check_players_to_remove(&mut self) -> Vec<u64> {
     self.players_to_remove.clear();
 
     for (id, hero) in self.players.iter_mut() {
       if hero.player().to_delete {
-        self.players_to_remove.push(*id as u32);
+        self.players_to_remove.push(*id);
       }
     }
 
@@ -208,17 +188,23 @@ impl PlayersManager {
   //   }
   // }
 
-  pub fn get_player(&self, id: i64) -> Option<&HeroWrapper> {
+  pub fn get_player(&self, id: u64) -> Option<&HeroWrapper> {
     self.players.get(&id)
   }
 
-  pub(crate) fn pack_players(&self) -> HashMap<u32, PackedPlayer> {
-    let mut result = HashMap::new();
+  pub(crate) fn pack_players(&self) -> Vec<u64> {
+    let mut result = Vec::new();
 
-    for (id, hero) in self.players.iter() {
-      result.insert(*id as u32, hero.pack());
+    for (id, _) in self.players.iter() {
+      result.push(*id);
     }
 
     result
+  }
+
+  pub fn clean_changes(&mut self) {
+    for (_, player) in self.players.iter_mut() {
+      player.clear_changes();
+    }
   }
 }

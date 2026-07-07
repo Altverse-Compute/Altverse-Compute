@@ -20,15 +20,14 @@ impl PlayerDraining {
 }
 
 impl PlayerEffectLogic for PlayerDraining {
-  fn enable(&mut self, player: &mut HeroWrapper) {
-  }
-  fn disable(&self, player: &mut HeroWrapper) {
-  }
+  fn enable(&mut self, player: &mut HeroWrapper) {}
+  fn disable(&self, player: &mut HeroWrapper) {}
   fn update(&mut self, props: &mut EffectUpdateProps<'_>) {
     let target = props.target.player_mut();
     let caster = props.caster.entity();
 
-    target.energy -= 16.0 * props.delta  as f64 / 1000.0;
+    target.energy -= 16.0 * props.delta / 1000.0;
+    target.changed_energy();
 
     if distance(target.pos.x - caster.pos.x, target.pos.y - caster.pos.y) >= 150.0 + target.radius {
       self.effect.to_remove = true;

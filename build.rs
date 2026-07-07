@@ -1,17 +1,27 @@
 use std::path::PathBuf;
+use std::process::Command;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   napi_build::setup();
 
-  let proto_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto/proto");
-  let proto_file = proto_dir.join("game.proto");
+  let schema_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto/flat");
 
-  println!("cargo:rerun-if-changed={}", proto_dir.display());
-  println!("cargo:rerun-if-changed={}", proto_file.display());
+  let schema_file = schema_dir.join("game.fbs");
 
-  let mut config = prost_build::Config::new();
+  println!("cargo:rerun-if-changed={}", schema_dir.display());
+  println!("cargo:rerun-if-changed={}", schema_file.display());
 
-  config.compile_protos(&[proto_file], &[proto_dir])?;
+  let out_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto/gen/flat");
 
+  let status = Command::new("flatc")
+    .arg("--rust")
+    .arg("-o")
+    .arg(&out_dir)
+    .arg(&schema_file)
+    .status()?;
+
+  if !status.success() {
+    panic!("flatc failed");
+  }
   Ok(())
 }

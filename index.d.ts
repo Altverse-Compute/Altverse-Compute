@@ -43,8 +43,3 @@ export declare class JoinProps {
   id: number
   constructor(name: string, id: number)
 }
-
-export declare class Vector {
-  x: number
-  y: number
-}

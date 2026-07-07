@@ -1,13 +1,12 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
+use crate::resources::entity::{Entity, EntityField};
 use crate::resources::player::Player;
 use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdateProps};
 use std::f64::consts::PI;
 
-const MAX_DIST: f64 = 5.625 * 32.0;
-const ANGLE_INCREMENT: f64 = 0.04;
+const MAX_DIST: f32 = 5.625 * 32.0;
+const ANGLE_INCREMENT: f32 = 0.04;
 
 #[derive(Clone)]
 pub struct Bee {
@@ -51,14 +50,14 @@ impl EntityLogic for Bee {
 
       let mut angle_diff = target_angle - self.entity.angle;
 
-      if angle_diff > PI {
-        angle_diff -= 2.0 * PI;
+      if angle_diff > PI as f32 {
+        angle_diff -= 2.0 * PI as f32;
       }
-      if angle_diff < -PI {
-        angle_diff += 2.0 * PI;
+      if angle_diff < -PI as f32 {
+        angle_diff += 2.0 * PI as f32;
       }
 
-      let max_turn = ANGLE_INCREMENT * (props.delta as f64 / 16.67);
+      let max_turn = ANGLE_INCREMENT * (props.delta as f32 / 16.67);
       if angle_diff.abs() < max_turn {
         self.entity.angle = target_angle;
       } else {
@@ -76,8 +75,12 @@ impl EntityLogic for Bee {
     self.entity.interact(player);
   }
 
-  fn pack(&self) -> PackedEntity {
-    self.entity.pack()
+  fn get_changes(&self) -> Vec<EntityField> {
+    self.entity.get_changes()
+  }
+
+  fn clear_changes(&mut self) {
+    self.entity.clear_changes();
   }
 
   fn entity(&self) -> &Entity {

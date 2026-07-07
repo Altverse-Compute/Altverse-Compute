@@ -23,50 +23,50 @@ thread_local! {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Boundary {
-  pub x: f64,
-  pub y: f64,
-  pub w: f64,
-  pub h: f64,
+  pub x: f32,
+  pub y: f32,
+  pub w: f32,
+  pub h: f32,
 }
 
 #[derive(Clone, Copy)]
 pub struct EntityProps {
   pub id: u64,
   pub type_id: u64,
-  pub radius: f64,
-  pub speed: f64,
+  pub radius: f32,
+  pub speed: f32,
   pub boundary: Boundary,
 }
 
 pub struct EntityUpdateProps<'a> {
-  pub delta: i64,
-  pub time_fix: f64,
+  pub delta: f32,
+  pub time_fix: f32,
   pub players: Vec<&'a Player>,
   pub event_bus: &'a mut EventBus,
 }
 
 pub struct EffectUpdateProps<'a> {
-  pub delta: i64,
-  pub time_fix: f64,
+  pub delta: f32,
+  pub time_fix: f32,
   pub caster: &'a EntityWrapper,
   pub target: &'a mut HeroWrapper,
   pub boundary: Boundary,
 }
 
 pub struct PartEffectUpdateProps<'a> {
-  pub delta: i64,
-  pub time_fix: f64,
+  pub delta: f32,
+  pub time_fix: f32,
   pub target: &'a Player,
 }
 
 pub struct UpdateProps {
-  pub delta: i64,
-  pub time_fix: f64,
+  pub delta: f32,
+  pub time_fix: f32,
 }
 
 pub struct PlayerUpdateProps<'a> {
-  pub delta: i64,
-  pub time_fix: f64,
+  pub delta: f32,
+  pub time_fix: f32,
   pub players: Vec<&'a Player>,
   pub event_bus: &'a mut EventBus,
 }
@@ -87,14 +87,14 @@ pub struct AdditionalEntityProps {
 
 // functions
 
-pub fn distance(a: f64, b: f64) -> f64 {
+pub fn distance(a: f32, b: f32) -> f32 {
   (a * a + b * b).sqrt()
 }
 
-pub fn random(min: f64, max: f64) -> f64 {
+pub fn random(min: f32, max: f32) -> f32 {
   RNG.with(|rng| {
-    let mut r: f64 = rng.borrow_mut().random::<f64>();
-    r = r.clamp(0.0, 1.0 - f64::EPSILON * 2.0);
+    let mut r: f32 = rng.borrow_mut().random();
+    r = r.clamp(0.0, 1.0 - f32::EPSILON * 2.0);
 
     r * (max - min) + min
   })

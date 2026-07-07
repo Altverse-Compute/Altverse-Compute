@@ -1,83 +1,75 @@
+use crate::fbs::Package;
 use crate::managers::player::PlayersManager;
-use crate::proto::package::Kind;
-use crate::proto::{Package, Packages};
 use crate::resources::assets::effect::PlayerEffectWrapper;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::vector::Vector;
+use flatbuffers::FlatBufferBuilder;
 use std::collections::HashMap;
 
 pub struct Client {
-  pub packages: Packages,
+  pub packages: Vec<Package>,
   pub input: Input,
+  pub flat_builder: FlatBufferBuilder<'static>,
 }
 
 pub struct NetworkBus {
-  pub direct_clients: HashMap<i64, Client>,
-  pub area_clients: HashMap<(String, u64), Packages>,
+  pub direct_clients: HashMap<u64, Client>,
 }
 
 impl NetworkBus {
   pub fn new() -> Self {
     Self {
       direct_clients: HashMap::new(),
-      area_clients: HashMap::new(),
     }
   }
 
-  pub fn add_client(&mut self, player_id: i64) {
+  pub fn add_client(&mut self, player_id: u64) {
     self.direct_clients.insert(
       player_id,
       Client {
         input: Input::new(),
-        packages: Packages { items: Vec::new() },
+        packages: Vec::new(),
+        flat_builder: FlatBufferBuilder::new(),
       },
     );
   }
 
-  pub fn remove_client(&mut self, player_id: i64) {
+  pub fn remove_client(&mut self, player_id: u64) {
     if let Some(_) = self.direct_clients.get(&player_id) {
       self.direct_clients.remove(&player_id);
     }
   }
 
-  pub fn accept_input(&mut self, id: i64, input: &Input) {
+  pub fn accept_input(&mut self, id: u64, input: &Input) {
     if let Some(client) = self.direct_clients.get_mut(&id) {
       client.input = input.clone();
     }
   }
 
-  pub fn add_global_package(&mut self, package: Kind) {
+  pub fn add_global_package(&mut self, package: Package) {
     for client in self.direct_clients.values_mut() {
-      client.packages.items.push(Package {
-        kind: Some(package.clone()),
-      });
+      client.packages.push(package.clone());
     }
   }
 
-  pub fn add_area_package(&mut self, name: String, area: u64, package: Kind) {
-    if let Some(area) = self.area_clients.get_mut(&(name.clone(), area)) {
-      area.items.push(Package {
-        kind: Some(package),
-      });
-    } else {
-      self
-        .area_clients
-        .insert((name, area), Packages { items: Vec::new() });
+  pub fn add_area_package(&mut self, ids: Vec<u64>, package: Package) {
+    for id in ids {
+      if let Some(client) = self.direct_clients.get_mut(&id) {
+        client.packages.push(package.clone());
+      }
     }
   }
 
-  pub fn add_direct_package(&mut self, id: i64, package: Kind) {
+  pub fn add_direct_package(&mut self, id: u64, package: Package) {
     if let Some(client) = self.direct_clients.get_mut(&id) {
-      client.packages.items.push(Package {
-        kind: Some(package),
-      });
+      client.packages.push(package);
     }
   }
 
   pub fn clear_packages(&mut self) {
     for (_, client) in self.direct_clients.iter_mut() {
-      client.packages.items.clear();
+      client.packages.clear();
     }
   }
 }
@@ -85,11 +77,11 @@ impl NetworkBus {
 #[derive(Clone)]
 pub enum PlayerEvent {
   ResPlayerAndMove {
-    player_id: i64,
+    player_id: u64,
     pos: Vector,
   },
   AddEffect {
-    player_id: i64,
+    player_id: u64,
     effect_id: u64,
     caster_id: u64,
   },
@@ -112,7 +104,7 @@ impl EventBus {
     self.entities_to_spawn.push(entity);
   }
 
-  pub fn respawn_player_and_move(&mut self, player_id: i64, pos: Vector) {
+  pub fn respawn_player_and_move(&mut self, player_id: u64, pos: Vector) {
     self
       .players_events
       .push(PlayerEvent::ResPlayerAndMove { player_id, pos });

@@ -1,5 +1,4 @@
-use crate::proto::PackedPlayer;
-use crate::resources::player::Player;
+use crate::resources::player::{Player, PlayerField};
 use crate::resources::utils::input::Input;
 use crate::resources::{Boundary, PlayerUpdateProps};
 
@@ -11,7 +10,8 @@ pub trait Hero {
   fn knock(&mut self);
   fn res(&mut self);
   fn collide(&mut self, boundary: Boundary);
-  fn pack(&self) -> PackedPlayer;
+  fn get_changes(&self) -> Vec<PlayerField>;
+  fn clear_changes(&mut self);
   fn player(&self) -> &Player;
   fn player_mut(&mut self) -> &mut Player;
 }

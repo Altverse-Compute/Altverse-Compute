@@ -132,3 +132,4 @@ Cargo.lock
 
 protos/index.js
 protos/index.d.ts
+/additional/tracker/target/

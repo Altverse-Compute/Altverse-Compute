@@ -1,5 +1,5 @@
 use crate::config::RawWorld;
-use crate::proto::PackedArea;
+use crate::fbs::PackedArea;
 use crate::resources::area::Area;
 use crate::resources::player::Player;
 
@@ -34,7 +34,7 @@ impl World {
     PackedArea {
       w: area.raw_area.w as f32,
       h: area.raw_area.h as f32,
-      area: area_id as u64,
+      area: area_id as u32,
       world: self.raw_world.name.clone(),
       entities: area.get_packed_entities(),
     }

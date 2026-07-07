@@ -3,8 +3,10 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/additional/tracker/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/old_src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/old_src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/additional/tracker/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

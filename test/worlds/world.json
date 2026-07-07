@@ -9,8 +9,8 @@
     {
       "enemies": [
         {
-          "types": ["sizer", "cloud", "storm_cloud"],
-          "radius": 15,
+          "types": ["fade", "cloud"],
+          "radius": 45,
           "speed": 5,
           "count": 20
         }

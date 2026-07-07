@@ -1,11 +1,8 @@
 use crate::bus::{EventBus, NetworkBus};
 use crate::config::Config;
+use crate::fbs::Package;
 use crate::managers::player::PlayersManager;
 use crate::props::EngineProps;
-use crate::proto::package::Kind;
-use crate::proto::{
-  CloseEntities, Entities, PackedEntity, PartialEntity, Players, UpdateEntitiesMap,
-};
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
 use crate::resources::world::World;
@@ -14,11 +11,11 @@ use std::collections::HashMap;
 
 pub struct WorldsManager {
   pub worlds: HashMap<String, World>,
-  pub new_entities: HashMap<u64, PackedEntity>,
-  pub old_entities: HashMap<u64, PackedEntity>,
-  pub entities_diff: HashMap<u32, PartialEntity>,
-  pub spawned_entities: HashMap<u32, PackedEntity>,
-  pub entities_to_remove: Vec<u32>,
+  pub new_entities: Vec<u64>,
+  pub old_entities: Vec<u64>,
+  pub entities_diff: Vec<u64>,
+  pub spawned_entities: Vec<u64>,
+  pub entities_to_remove: Vec<u64>,
 }
 
 pub enum Change {
@@ -32,10 +29,10 @@ impl WorldsManager {
   pub fn new(props: &EngineProps) -> Self {
     Self {
       worlds: props.load_worlds().unwrap(),
-      new_entities: HashMap::new(),
-      old_entities: HashMap::new(),
-      entities_diff: HashMap::new(),
-      spawned_entities: HashMap::new(),
+      new_entities: Vec::new(),
+      old_entities: Vec::new(),
+      entities_diff: Vec::new(),
+      spawned_entities: Vec::new(),
       entities_to_remove: Vec::new(),
     }
   }
@@ -58,7 +55,7 @@ impl WorldsManager {
         let mut entity_update = EntityUpdateProps {
           delta: props.delta,
           time_fix: props.time_fix,
-          players: area.get_players_vec(&players_clone),
+          players: area.get_players_vec(players_clone),
           event_bus,
         };
 
@@ -67,36 +64,39 @@ impl WorldsManager {
             let target_id = effect.effect().target_id.clone();
             let caster_id = effect.effect().caster_id.clone();
 
-              if let Some(target) = players.get_mut(&target_id) {
-                if let Some(caster) = area.entities.get_mut(&caster_id) {
-                  effect.update(&mut EffectUpdateProps {
-                    delta: props.delta,
-                    time_fix: props.time_fix,
-                    caster,
-                    target,
-                    boundary,
-                  });
-                }
+            if let Some(target) = players.get_mut(&target_id) {
+              if let Some(caster) = area.entities.get_mut(&caster_id) {
+                effect.update(&mut EffectUpdateProps {
+                  delta: props.delta,
+                  time_fix: props.time_fix,
+                  caster,
+                  target,
+                  boundary,
+                });
               }
+            }
           }
         }
 
         area.entities.retain(|id, entity| {
           if entity.entity().to_remove {
-            self.entities_to_remove.push(*id as u32);
+            self.entities_to_remove.push(*id);
             false
           } else {
             true
           }
         });
 
-        for (_, entity) in area.entities.iter_mut() {
+        for (id, entity) in area.entities.iter_mut() {
           entity.update(&mut entity_update);
+          if !entity.get_changes().is_empty() {
+              self.entities_diff.push(*id);
+           }
         }
 
         for (_, entity) in area.entities.iter_mut() {
           for id in &area.players_id {
-            if let Some(player) = players.get_mut(&id) {
+            if let Some(player) = players.get_mut(id) {
               entity.interact(player);
             }
           }
@@ -128,49 +128,37 @@ impl WorldsManager {
 
         for entity in event_bus.entities_to_spawn.iter() {
           let id = area.add_entity(entity.clone());
-          self.spawned_entities.insert(id as u32, entity.pack());
+          self.spawned_entities.push(id);
         }
 
         self.new_entities = area.get_packed_entities();
 
-        for (id, entity) in self.new_entities.iter() {
-          if let Some(old_entity) = self.old_entities.get(&id) {
-            let (diff, changed) = old_entity.diff(&entity);
-            if changed {
-              self.entities_diff.insert(*id as u32, diff);
-            }
-          }
-        }
-
         if !self.spawned_entities.is_empty() {
-          let package = Kind::NewEntities(Entities {
-            entities: self.spawned_entities.clone(),
-          });
-          network_bus.add_area_package(name.clone(), index as u64, package.clone());
+          let package =
+            Package::NewEntities((self.spawned_entities.clone(), name.clone(), index.clone()));
+          network_bus.add_area_package(area.players_id.clone(), package.clone());
           self.spawned_entities.clear();
         }
 
         if !self.entities_to_remove.is_empty() {
-          let package = Kind::CloseEntities(CloseEntities {
-            ids: self.entities_to_remove.clone(),
-          });
-          network_bus.add_area_package(name.clone(), index as u64, package.clone());
+          let package =
+            Package::CloseEntities(self.entities_to_remove.clone());
+          network_bus.add_area_package(area.players_id.clone(), package.clone());
           self.entities_to_remove.clear();
         }
 
         if !self.entities_diff.is_empty() {
-          let package = Kind::UpdateEntities(UpdateEntitiesMap {
-            items: self.entities_diff.clone(),
-          });
-          network_bus.add_area_package(name.clone(), index as u64, package.clone());
+          let package =
+            Package::UpdateEntities((self.entities_diff.clone(), name.clone(), index.clone()));
+          network_bus.add_area_package(area.players_id.clone(), package.clone());
           self.entities_diff.clear();
         }
       }
     }
   }
 
-  pub fn prepare_warps(&mut self, players: &HashMap<i64, HeroWrapper>) -> HashMap<i64, Change> {
-    let mut changes: HashMap<i64, Change> = HashMap::new();
+  pub fn prepare_warps(&mut self, players: &HashMap<u64, HeroWrapper>) -> HashMap<u64, Change> {
+    let mut changes: HashMap<u64, Change> = HashMap::new();
 
     for (id, hero) in players.iter() {
       let player = hero.player();
@@ -229,11 +217,9 @@ impl WorldsManager {
               player.pos.x = -8.0 * 32.0 + player.radius;
               let next_area = world.areas.get_mut(player.area as usize).unwrap();
               next_area.join(player.id);
-              let area_init_package = Kind::AreaInit(world.pack_area(player.area as usize));
+              let area_init_package = Package::AreaInit(world.pack_area(player.area as usize));
               network_bus.add_direct_package(*id, area_init_package);
-              let players_package = Kind::Players(Players {
-                players: players_manager.pack_players(),
-              });
+              let players_package = Package::Players(players_manager.pack_players());
               network_bus.add_direct_package(*id, players_package);
             }
           }
@@ -247,11 +233,9 @@ impl WorldsManager {
               prev_area.join(player.id);
 
               player.pos.x = prev_area.raw_area.w + 8.0 * 32.0 - player.radius;
-              let area_init_package = Kind::AreaInit(world.pack_area(player.area as usize));
+              let area_init_package = Package::AreaInit(world.pack_area(player.area as usize));
               network_bus.add_direct_package(*id, area_init_package);
-              let players_package = Kind::Players(Players {
-                players: players_manager.pack_players(),
-              });
+              let players_package = Package::Players(players_manager.pack_players());
               network_bus.add_direct_package(*id, players_package);
             }
           }
@@ -265,11 +249,9 @@ impl WorldsManager {
             player.world = next_world_name;
             player.pos.y = area.raw_area.h - player.radius - 2.0 * 32.0;
             next_world.join(&player);
-            let area_init_package = Kind::AreaInit(next_world.pack_area(player.area as usize));
+            let area_init_package = Package::AreaInit(next_world.pack_area(player.area as usize));
             network_bus.add_direct_package(*id, area_init_package);
-            let players_package = Kind::Players(Players {
-              players: players_manager.pack_players(),
-            });
+            let players_package = Package::Players(players_manager.pack_players());
             network_bus.add_direct_package(*id, players_package);
           }
           Change::PrevWorld => {
@@ -281,11 +263,9 @@ impl WorldsManager {
             player.world = prev_world_name;
             player.pos.y = player.radius + 2.0 * 32.0;
             prev_world.join(&player);
-            let area_init_package = Kind::AreaInit(prev_world.pack_area(player.area as usize));
+            let area_init_package = Package::AreaInit(prev_world.pack_area(player.area as usize));
             network_bus.add_direct_package(*id, area_init_package);
-            let players_package = Kind::Players(Players {
-              players: players_manager.pack_players(),
-            });
+            let players_package = Package::Players(players_manager.pack_players());
             network_bus.add_direct_package(*id, players_package);
           }
         };
@@ -327,5 +307,15 @@ impl WorldsManager {
       }
     }
     false
+  }
+
+  pub fn clean_changes(&mut self) {
+    for (_, world) in self.worlds.iter_mut() {
+      for area in world.areas.iter_mut() {
+        for (_, entity) in area.entities.iter_mut() {
+          entity.clear_changes();
+        }
+      }
+    }
   }
 }

@@ -1,28 +1,38 @@
-use crate::proto::PackedEntity;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::utils::vector::Vector;
 use crate::resources::{distance, random, Boundary, EntityProps, EntityUpdateProps};
 use std::f32::consts::PI;
+use track_changes_derive::TrackChanges;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, TrackChanges)]
 pub struct Entity {
+  #[track(skip)]
   pub id: u64,
   pub type_id: u64,
-  pub radius: f64,
-  pub speed: f64,
+  pub radius: f32,
+  pub speed: f32,
   pub harmless: bool,
+  #[track(skip)]
   pub immune: bool,
-  pub angle: f64,
+  #[track(skip)]
+  pub angle: f32,
   pub pos: Vector,
+  #[track(skip)]
   pub vel: Vector,
+  #[track(skip)]
   pub to_remove: bool,
-  pub friction: f64,
-  pub aura: f64,
+  #[track(skip)]
+  pub friction: f32,
+  #[track(skip)]
+  pub aura: f32,
+  #[track(skip)]
   pub boundary: Boundary,
 
-  pub state: u64,
-  pub state_metadata: f64,
-  pub alpha: f64,
+  pub state: u8,
+  pub state_metadata: f32,
+  pub alpha: f32,
+
+  pub changes: Vec<EntityField>,
 }
 
 impl Entity {
@@ -41,7 +51,7 @@ impl Entity {
         props.boundary.x + props.boundary.w,
         props.boundary.y + props.boundary.h,
       ),
-      vel: Vector::from_angle(angle * PI as f64 * 2.0, props.speed),
+      vel: Vector::from_angle(angle * PI * 2.0, props.speed),
       harmless: false,
       to_remove: false,
       friction: 0.0,
@@ -51,6 +61,8 @@ impl Entity {
       state_metadata: 0.0,
       alpha: 1.0,
       aura: 0.0,
+
+      changes: Vec::new(),
     }
   }
 
@@ -58,9 +70,10 @@ impl Entity {
     self.movement(props.time_fix);
   }
 
-  pub fn movement(&mut self, time_fix: f64) {
+  pub fn movement(&mut self, time_fix: f32) {
     self.pos.x += self.vel.x * time_fix;
     self.pos.y += self.vel.y * time_fix;
+    self.changed_pos();
 
     let dim = 1.0 - self.friction * time_fix;
     self.vel.x *= dim;
@@ -81,19 +94,23 @@ impl Entity {
   pub fn collide(&mut self) {
     if self.pos.x - self.radius < self.boundary.x {
       self.pos.x = self.boundary.x + self.radius;
-      self.vel.x = self.vel.x.abs()
+      self.vel.x = self.vel.x.abs();
+      self.changed_pos();
     }
     if self.pos.x + self.radius > self.boundary.x + self.boundary.w {
       self.pos.x = self.boundary.x + self.boundary.w - self.radius;
-      self.vel.x = -(self.vel.x.abs())
+      self.vel.x = -self.vel.x.abs();
+      self.changed_pos();
     }
     if self.pos.y - self.radius < self.boundary.y {
       self.pos.y = self.boundary.y + self.radius;
       self.vel.y = self.vel.y.abs();
+      self.changed_pos();
     }
     if self.pos.y + self.radius > self.boundary.y + self.boundary.h {
       self.pos.y = self.boundary.y + self.boundary.h - self.radius;
       self.vel.y = -(self.vel.y.abs());
+      self.changed_pos();
     }
   }
 
@@ -113,16 +130,24 @@ impl Entity {
     }
   }
 
-  pub fn pack(&self) -> PackedEntity {
-    PackedEntity {
-      type_id: self.type_id as u32,
-      x: (self.pos.x * 2.0).round() as i32,
-      y: (self.pos.y * 2.0).round() as i32,
-      radius: (self.radius * 2.0).round().abs() as u32,
-      harmless: self.harmless,
-      state: self.state as u32,
-      state_metadata: (self.state_metadata * 2.0).round().abs() as u32,
-      alpha: (self.alpha * 20.0).round().abs() as u32,
-    }
+  pub fn get_changes(&self) -> Vec<EntityField> {
+    self.changes.clone()
   }
+
+  pub fn clear_changes(&mut self) {
+    self.changes = Vec::new();
+  }
+
+  // pub fn pack(&self) -> PackedEntity {
+  //   PackedEntity {
+  //     type_id: self.type_id as u32,
+  //     x: (self.pos.x * 2.0).round() as i32,
+  //     y: (self.pos.y * 2.0).round() as i32,
+  //     radius: (self.radius * 2.0).round().abs() as u32,
+  //     harmless: self.harmless,
+  //     state: self.state as u32,
+  //     state_metadata: (self.state_metadata * 2.0).round().abs() as u32,
+  //     alpha: (self.alpha * 20.0).round().abs() as u32,
+  //   }
+  // }
 }
