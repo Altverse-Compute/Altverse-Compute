@@ -91,8 +91,9 @@ impl EntityLogic for FlameTrail {
     self.entity.update(props);
     self.entity.collide();
 
+    let duration = 5000.0 / self.owner_speed;
     self.timer += props.delta as f32;
-    self.entity.alpha = 1.0 - self.timer / (5000.0 / self.owner_speed);
+    self.entity.alpha = (1.0 - self.timer / duration).clamp(0.0, 1.0);
     self.entity.changed_alpha();
     if self.timer >= 5000.0 / self.owner_speed {
       self.entity.to_remove = true;

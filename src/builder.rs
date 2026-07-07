@@ -457,15 +457,9 @@ pub fn build_packages<'a>(
         }
         None => {}
       },
-      OwnPackage::ClosePlayer(id) => match players_manager.get_player(id) {
-        Some(player) => {
-          packages.push(build_close_player(
-            &mut client.flat_builder,
-            player.player().id,
-          ));
-        }
-        None => {}
-      },
+      OwnPackage::ClosePlayer(id) => {
+        packages.push(build_close_player(&mut client.flat_builder, id))
+      }
       OwnPackage::Players(ids) => {
         packages.push(build_players(
           &mut client.flat_builder,
@@ -524,7 +518,6 @@ pub fn build_packages<'a>(
         &area,
       )),
       OwnPackage::Chat(message) => {
-        println!("{:?}", message);
         packages.push(build_chat_message(&mut client.flat_builder, &message))
       }
     }

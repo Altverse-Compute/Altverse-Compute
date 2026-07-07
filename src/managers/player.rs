@@ -83,11 +83,9 @@ impl PlayersManager {
 
   pub fn snapshot_end(&mut self, network_bus: &mut NetworkBus) {
     self.players_diff.clear();
-    for index in 0..self.players.len() {
-      if let Some(wrapper) = self.players.get_mut(&(index as u64)) {
-        if !wrapper.get_changes().is_empty() {
-          self.players_diff.push(index as u64);
-        }
+    for (index, hero) in self.players.iter() {
+      if !hero.get_changes().is_empty() {
+        self.players_diff.push(*index);
       }
     }
     if !self.players_diff.is_empty() {
