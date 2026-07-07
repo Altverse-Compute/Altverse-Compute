@@ -119,7 +119,7 @@ fn build_partial_entity<'a>(
         .then_some(entity.state_metadata),
       alpha: changes
         .contains(&EntityField::Alpha)
-        .then_some(entity.alpha),
+        .then_some((entity.alpha * 255.0).round() as u8),
     },
   )
 }

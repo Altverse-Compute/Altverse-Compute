@@ -19,7 +19,7 @@ use napi_derive::napi;
 use std::sync::Mutex;
 
 pub mod flat {
-  include!("proto/generated/flat/game_generated.rs");
+  include!("proto/gen/flat/game_generated.rs");
 }
 
 mod builder;

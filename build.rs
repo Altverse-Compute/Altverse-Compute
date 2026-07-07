@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   println!("cargo:rerun-if-changed={}", schema_dir.display());
   println!("cargo:rerun-if-changed={}", schema_file.display());
 
-  let out_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto/generated/flat");
+  let out_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/proto/gen/flat");
 
   let status = Command::new("flatc")
     .arg("--rust")
