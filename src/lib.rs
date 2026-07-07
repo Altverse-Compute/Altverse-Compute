@@ -6,9 +6,9 @@ use crate::fbs::{Chat, Package, Role};
 use crate::managers::player::PlayersManager;
 use crate::managers::world::WorldsManager;
 use crate::props::EngineProps;
+use crate::resources::UpdateProps;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
-use crate::resources::UpdateProps;
 use chrono::Utc;
 use lazy_static::lazy_static;
 use napi::bindgen_prelude::{Buffer, Null};
@@ -154,7 +154,7 @@ impl ComputeEngine {
     for (key, value) in self.network_bus.direct_clients.iter_mut() {
       let result = build_packages(value, &mut self.players_manager, &mut self.worlds_manager);
       value.flat_builder.finish(result, None);
-      let uint8  = Buffer::from(value.flat_builder.finished_data());
+      let uint8 = Buffer::from(value.flat_builder.finished_data());
       object.set(key.to_string(), uint8);
       value.packages.clear();
       value.flat_builder.reset();

@@ -524,6 +524,7 @@ pub fn build_packages<'a>(
         &area,
       )),
       OwnPackage::Chat(message) => {
+        println!("{:?}", message);
         packages.push(build_chat_message(&mut client.flat_builder, &message))
       }
     }

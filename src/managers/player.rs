@@ -78,7 +78,6 @@ impl PlayersManager {
       }
       self.players.remove(&player_id);
     }
-    network_bus.remove_client(player_id);
     network_bus.add_global_package(Package::ClosePlayer(player_id));
   }
 
