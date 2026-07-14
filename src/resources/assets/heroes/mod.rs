@@ -10,7 +10,7 @@ pub trait Hero {
   fn knock(&mut self);
   fn res(&mut self);
   fn collide(&mut self, boundary: Boundary);
-  fn get_changes(&self) -> Vec<PlayerField>;
+  fn get_changes(&self) -> u32;
   fn clear_changes(&mut self);
   fn player(&self) -> &Player;
   fn player_mut(&mut self) -> &mut Player;

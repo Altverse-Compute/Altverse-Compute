@@ -2,7 +2,7 @@ use crate::config::RawArea;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
-use crate::resources::{random, AdditionalEntityProps, Boundary, EntityProps};
+use crate::resources::{AdditionalEntityProps, Boundary, EntityProps, random};
 use std::collections::HashMap;
 
 pub struct Area {
@@ -39,7 +39,7 @@ impl Area {
   pub fn get_packed_entities(&self) -> Vec<u64> {
     let mut packed_entities = Vec::new();
 
-    for (id, entity) in self.entities.iter() {
+    for (id, _) in self.entities.iter() {
       packed_entities.push(*id);
     }
 

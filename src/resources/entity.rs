@@ -1,6 +1,6 @@
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::utils::vector::Vector;
-use crate::resources::{distance, random, Boundary, EntityProps, EntityUpdateProps};
+use crate::resources::{Boundary, EntityProps, EntityUpdateProps, distance, random};
 use std::f32::consts::PI;
 use track_changes_derive::TrackChanges;
 
@@ -32,7 +32,7 @@ pub struct Entity {
   pub state_metadata: f32,
   pub alpha: f32,
 
-  pub changes: Vec<EntityField>,
+  pub changes: u8,
 }
 
 impl Entity {
@@ -62,7 +62,7 @@ impl Entity {
       alpha: 1.0,
       aura: 0.0,
 
-      changes: Vec::new(),
+      changes: 0,
     }
   }
 
@@ -130,12 +130,12 @@ impl Entity {
     }
   }
 
-  pub fn get_changes(&self) -> Vec<EntityField> {
-    self.changes.clone()
+  pub fn get_changes(&self) -> u8 {
+    self.changes
   }
 
   pub fn clear_changes(&mut self) {
-    self.changes = Vec::new();
+    self.changes = 0;
   }
 
   // pub fn pack(&self) -> PackedEntity {

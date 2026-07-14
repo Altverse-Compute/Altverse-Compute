@@ -52,7 +52,7 @@ impl EntityLogic for Flame {
     self.entity.interact(player);
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 
@@ -108,7 +108,7 @@ impl EntityLogic for FlameTrail {
     self.entity.interact(player);
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 

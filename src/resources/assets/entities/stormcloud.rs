@@ -1,7 +1,7 @@
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
-use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdateProps};
+use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
 
 #[derive(Clone)]
 pub struct StormCloud {
@@ -58,7 +58,7 @@ impl EntityLogic for StormCloud {
     }
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 

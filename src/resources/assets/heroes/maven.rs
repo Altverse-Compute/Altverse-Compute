@@ -2,14 +2,13 @@ use crate::resources::assets::heroes::Hero;
 use crate::resources::player::{Player, PlayerField};
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
-use crate::resources::{distance, Boundary, PlayerUpdateProps};
+use crate::resources::{Boundary, PlayerUpdateProps, distance};
 
 #[derive(Clone)]
 pub struct Maven {
   player: Player,
   first_ability_active: bool,
   first_ability_cooldown: f64,
-  second_ability_cooldown: f64,
 }
 
 impl Maven {
@@ -18,7 +17,6 @@ impl Maven {
       player: Player::new(props),
       first_ability_active: false,
       first_ability_cooldown: 0.0,
-      second_ability_cooldown: 0.0,
     }
   }
 
@@ -97,7 +95,7 @@ impl Hero for Maven {
     self.player.collide(boundary);
   }
 
-  fn get_changes(&self) -> Vec<PlayerField> {
+  fn get_changes(&self) -> u32 {
     self.player.get_changes()
   }
 

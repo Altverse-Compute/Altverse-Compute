@@ -99,27 +99,18 @@ fn build_partial_entity<'a>(
   wrapper: &EntityWrapper,
 ) -> WIPOffset<PartialEntity<'a>> {
   let entity = wrapper.entity();
-  let changes = entity.get_changes();
+  let mask = entity.get_changes();
   PartialEntity::create(
     builder,
     &PartialEntityArgs {
-      x: changes.contains(&EntityField::Pos).then_some(entity.pos.x),
-      y: changes.contains(&EntityField::Pos).then_some(entity.pos.y),
-      radius: changes
-        .contains(&EntityField::Radius)
-        .then_some(entity.radius),
-      harmless: changes
-        .contains(&EntityField::Harmless)
-        .then_some(entity.harmless),
-      state: changes
-        .contains(&EntityField::State)
-        .then_some(entity.state),
-      state_metadata: changes
-        .contains(&EntityField::StateMetadata)
+      x: (mask & EntityField::Pos as u8 != 0).then_some(entity.pos.x),
+      y: (mask & EntityField::Pos as u8 != 0).then_some(entity.pos.y),
+      radius: (mask & EntityField::Radius as u8 != 0).then_some(entity.radius),
+      harmless: (mask & EntityField::Harmless as u8 != 0).then_some(entity.harmless),
+      state: (mask & EntityField::State as u8 != 0).then_some(entity.state),
+      state_metadata: (mask & EntityField::StateMetadata as u8 != 0)
         .then_some(entity.state_metadata),
-      alpha: changes
-        .contains(&EntityField::Alpha)
-        .then_some((entity.alpha * 255.0).round() as u8),
+      alpha: (mask & EntityField::Alpha as u8 != 0).then_some((entity.alpha / 255f32) as u8),
     },
   )
 }
@@ -129,8 +120,8 @@ fn build_partial_player<'a>(
   wrapper: &HeroWrapper,
 ) -> WIPOffset<PartialPlayer<'a>> {
   let player = wrapper.player();
-  let changes = player.get_changes();
-  let mut world = if changes.contains(&PlayerField::World) {
+  let mask = player.get_changes();
+  let world = if (mask & PlayerField::World as u32 != 0) {
     Some(builder.create_string(player.world.as_str()))
   } else {
     None
@@ -139,34 +130,18 @@ fn build_partial_player<'a>(
   PartialPlayer::create(
     builder,
     &PartialPlayerArgs {
-      x: changes.contains(&PlayerField::Pos).then_some(player.pos.x),
-      y: changes.contains(&PlayerField::Pos).then_some(player.pos.y),
-      radius: changes
-        .contains(&PlayerField::Radius)
-        .then_some(player.radius),
-      speed: changes
-        .contains(&PlayerField::Speed)
-        .then_some(player.speed),
-      energy: changes
-        .contains(&PlayerField::Energy)
-        .then_some(player.energy),
-      max_energy: changes
-        .contains(&PlayerField::MaxEnergy)
-        .then_some(player.max_energy),
-      death_timer: changes
-        .contains(&PlayerField::DeathTimer)
-        .then_some(player.death_timer),
-      state: changes
-        .contains(&PlayerField::State)
-        .then_some(player.state),
-      state_metadata: changes
-        .contains(&PlayerField::StateMeta)
-        .then_some(player.state_meta),
-      area: changes.contains(&PlayerField::Area).then_some(player.area),
+      x: (mask & PlayerField::Pos as u32 != 0).then_some(player.pos.x),
+      y: (mask & PlayerField::Pos as u32 != 0).then_some(player.pos.y),
+      radius: (mask & PlayerField::Radius as u32 != 0).then_some(player.radius),
+      speed: (mask & PlayerField::Speed as u32 != 0).then_some(player.speed),
+      energy: (mask & PlayerField::Energy as u32 != 0).then_some(player.energy),
+      max_energy: (mask & PlayerField::MaxEnergy as u32 != 0).then_some(player.max_energy),
+      death_timer: (mask & PlayerField::DeathTimer as u32 != 0).then_some(player.death_timer),
+      state: (mask & PlayerField::State as u32 != 0).then_some(player.state),
+      state_metadata: (mask & PlayerField::StateMeta as u32 != 0).then_some(player.state_meta),
+      area: (mask & PlayerField::Area as u32 != 0).then_some(player.area),
       world,
-      died: changes
-        .contains(&PlayerField::Downed)
-        .then_some(player.downed),
+      died: (mask & PlayerField::Downed as u32 != 0).then_some(player.downed),
     },
   )
 }

@@ -2,7 +2,7 @@ use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::utils::vector::Vector;
-use crate::resources::{random, AdditionalEntityProps, EntityProps, EntityUpdateProps};
+use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, random};
 
 #[derive(Clone)]
 pub struct Drop {
@@ -113,7 +113,7 @@ impl EntityLogic for Drop {
     self.entity.interact(player);
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 

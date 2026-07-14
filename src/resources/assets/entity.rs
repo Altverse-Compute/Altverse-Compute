@@ -1,3 +1,4 @@
+use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::bee::Bee;
 use crate::resources::assets::entities::cloud::Cloud;
 use crate::resources::assets::entities::draining::Draining;
@@ -16,7 +17,6 @@ use crate::resources::assets::entities::slow::Slow;
 use crate::resources::assets::entities::sniper::{Bullet, Sniper};
 use crate::resources::assets::entities::stormcloud::StormCloud;
 use crate::resources::assets::entities::wall::Wall;
-use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
@@ -123,7 +123,7 @@ impl EntityWrapper {
     entity_dispatch!(self, interact(player));
   }
 
-  pub fn get_changes(&self) -> Vec<EntityField> {
+  pub fn get_changes(&self) -> u8 {
     entity_dispatch!(self, get_changes())
   }
   pub fn clear_changes(&mut self) {

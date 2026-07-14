@@ -114,6 +114,7 @@ impl EventBus {
     for event in self.players_events.iter() {
       match event {
         PlayerEvent::ResPlayerAndMove { player_id, pos } => {
+          let _ = pos;
           let players = &mut manager.players;
           if let Some(player) = players.get_mut(player_id) {
             player.res();
