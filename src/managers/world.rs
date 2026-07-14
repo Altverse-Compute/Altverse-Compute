@@ -6,7 +6,7 @@ use crate::props::EngineProps;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
 use crate::resources::world::World;
-use crate::resources::{distance, EffectUpdateProps, EntityUpdateProps, UpdateProps};
+use crate::resources::{EffectUpdateProps, EntityUpdateProps, UpdateProps, distance};
 use std::collections::HashMap;
 
 pub struct WorldsManager {
@@ -89,9 +89,9 @@ impl WorldsManager {
 
         for (id, entity) in area.entities.iter_mut() {
           entity.update(&mut entity_update);
-          if !entity.get_changes().is_empty() {
-              self.entities_diff.push(*id);
-           }
+          if !entity.get_changes() != 0 {
+            self.entities_diff.push(*id);
+          }
         }
 
         for (_, entity) in area.entities.iter_mut() {
@@ -141,8 +141,7 @@ impl WorldsManager {
         }
 
         if !self.entities_to_remove.is_empty() {
-          let package =
-            Package::CloseEntities(self.entities_to_remove.clone());
+          let package = Package::CloseEntities(self.entities_to_remove.clone());
           network_bus.add_area_package(area.players_id.clone(), package.clone());
           self.entities_to_remove.clear();
         }

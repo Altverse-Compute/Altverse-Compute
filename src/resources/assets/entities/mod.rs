@@ -1,6 +1,6 @@
+use crate::resources::EntityUpdateProps;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
-use crate::resources::EntityUpdateProps;
 
 pub mod bee;
 pub mod cloud;
@@ -24,7 +24,7 @@ pub mod wall;
 pub trait EntityLogic {
   fn update(&mut self, props: &mut EntityUpdateProps);
   fn interact(&mut self, player: &mut HeroWrapper);
-  fn get_changes(&self) -> Vec<EntityField>;
+  fn get_changes(&self) -> u8;
   fn clear_changes(&mut self);
   fn entity(&self) -> &Entity;
   fn entity_mut(&mut self) -> &mut Entity;

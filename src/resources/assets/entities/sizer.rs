@@ -48,7 +48,7 @@ impl EntityLogic for Sizer {
     self.entity.interact(player);
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 

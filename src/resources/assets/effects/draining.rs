@@ -1,7 +1,7 @@
 use crate::resources::assets::effects::PlayerEffectLogic;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::effect::PlayerEffect;
-use crate::resources::{distance, EffectUpdateProps};
+use crate::resources::{EffectUpdateProps, distance};
 
 #[derive(Clone, Debug)]
 pub struct PlayerDraining {
@@ -20,8 +20,8 @@ impl PlayerDraining {
 }
 
 impl PlayerEffectLogic for PlayerDraining {
-  fn enable(&mut self, player: &mut HeroWrapper) {}
-  fn disable(&self, player: &mut HeroWrapper) {}
+  fn enable(&mut self, _: &mut HeroWrapper) {}
+  fn disable(&self, _: &mut HeroWrapper) {}
   fn update(&mut self, props: &mut EffectUpdateProps<'_>) {
     let target = props.target.player_mut();
     let caster = props.caster.entity();

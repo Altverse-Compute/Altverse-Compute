@@ -3,7 +3,7 @@ use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::player::Player;
-use crate::resources::{distance, random, AdditionalEntityProps, EntityProps, EntityUpdateProps};
+use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance, random};
 
 #[derive(Clone)]
 pub struct HomingSniper {
@@ -86,7 +86,7 @@ impl EntityLogic for HomingSniper {
     self.entity.interact(player);
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 
@@ -174,7 +174,7 @@ impl EntityLogic for HomingBullet {
     self.entity.interact(player);
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 

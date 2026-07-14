@@ -1,8 +1,8 @@
+use crate::CONFIG;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::utils::vector::Vector;
-use crate::resources::{distance, Boundary, PlayerUpdateProps};
-use crate::CONFIG;
+use crate::resources::{Boundary, PlayerUpdateProps, distance};
 use track_changes_derive::TrackChanges;
 
 #[derive(Clone, Debug, TrackChanges)]
@@ -32,7 +32,7 @@ pub struct Player {
   pub to_delete: bool,
   pub hero: u32,
 
-  pub changes: Vec<PlayerField>,
+  pub changes: u32,
 }
 
 impl Player {
@@ -60,7 +60,7 @@ impl Player {
       area: spawn.area as u64,
       to_delete: false,
       hero: 0,
-      changes: Vec::new(),
+      changes: 0,
     }
   }
 
@@ -194,12 +194,12 @@ impl Player {
     }
   }
 
-  pub fn get_changes(&self) -> Vec<PlayerField> {
-    self.changes.clone()
+  pub fn get_changes(&self) -> u32 {
+    self.changes
   }
 
   pub fn clear_changes(&mut self) {
-    self.changes = Vec::new();
+    self.changes = 0;
   }
 
   // pub fn pack(&self) -> PackedPlayer {

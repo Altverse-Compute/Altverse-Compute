@@ -1,5 +1,5 @@
-use crate::resources::assets::heroes::maven::Maven;
 use crate::resources::assets::heroes::Hero;
+use crate::resources::assets::heroes::maven::Maven;
 use crate::resources::player::{Player, PlayerField};
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
@@ -45,7 +45,7 @@ impl HeroWrapper {
     hero_dispatch!(self, collide(boundary));
   }
 
-  pub fn get_changes(&self) -> Vec<PlayerField> {
+  pub fn get_changes(&self) -> u32 {
     hero_dispatch!(self, get_changes())
   }
   pub fn clear_changes(&mut self) {

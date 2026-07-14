@@ -2,7 +2,7 @@ use crate::bus::PlayerEvent;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
-use crate::resources::{distance, random, AdditionalEntityProps, EntityProps, EntityUpdateProps};
+use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance, random};
 
 #[derive(Clone)]
 pub struct Leaf {
@@ -106,7 +106,7 @@ impl EntityLogic for Leaf {
     }
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 

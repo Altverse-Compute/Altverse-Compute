@@ -11,9 +11,9 @@ use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use chrono::Utc;
 use lazy_static::lazy_static;
+use napi::bindgen_prelude::Function;
+use napi::bindgen_prelude::Object;
 use napi::bindgen_prelude::{Buffer, Null};
-use napi::bindgen_prelude::{Function, Uint8ArraySlice};
-use napi::bindgen_prelude::{JsObjectValue, Object};
 use napi::{Env, Error};
 use napi_derive::napi;
 use std::sync::Mutex;
@@ -40,7 +40,6 @@ pub struct ComputeEngine {
   worlds_manager: WorldsManager,
   network_bus: NetworkBus,
   event_bus: EventBus,
-  proto_buffer: Vec<u8>,
 
   last_timestamp: i64,
   player_death_callback: Option<Function<'static, i64, Null>>,
@@ -60,7 +59,6 @@ impl ComputeEngine {
       worlds_manager: WorldsManager::new(props),
       network_bus: NetworkBus::new(),
       last_timestamp: Utc::now().timestamp_millis(),
-      proto_buffer: Vec::with_capacity(1024),
       event_bus: EventBus::new(),
       player_death_callback: None,
     })
@@ -155,7 +153,7 @@ impl ComputeEngine {
       let result = build_packages(value, &mut self.players_manager, &mut self.worlds_manager);
       value.flat_builder.finish(result, None);
       let uint8 = Buffer::from(value.flat_builder.finished_data());
-      object.set(key.to_string(), uint8);
+      let _ = object.set(key.to_string(), uint8);
       value.packages.clear();
       value.flat_builder.reset();
     }

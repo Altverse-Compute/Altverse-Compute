@@ -1,10 +1,9 @@
 use crate::bus::EventBus;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::Entity;
 use crate::resources::player::Player;
-use rand::rngs::ThreadRng;
 use rand::Rng;
+use rand::rngs::ThreadRng;
 use std::cell::RefCell;
 
 pub mod area;
@@ -53,12 +52,6 @@ pub struct EffectUpdateProps<'a> {
   pub boundary: Boundary,
 }
 
-pub struct PartEffectUpdateProps<'a> {
-  pub delta: f32,
-  pub time_fix: f32,
-  pub target: &'a Player,
-}
-
 pub struct UpdateProps {
   pub delta: f32,
   pub time_fix: f32,
@@ -69,13 +62,6 @@ pub struct PlayerUpdateProps<'a> {
   pub time_fix: f32,
   pub players: Vec<&'a Player>,
   pub event_bus: &'a mut EventBus,
-}
-
-pub struct EffectProps<'a> {
-  pub delta: i64,
-  pub time_fix: f64,
-  pub target: &'a mut Player,
-  pub caster: &'a mut Entity,
 }
 
 #[derive(Clone, Copy)]

@@ -82,7 +82,7 @@ impl EntityLogic for FlameSniper {
     self.entity.interact(player);
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 
@@ -169,7 +169,7 @@ impl EntityLogic for FlameBullet {
     self.entity.interact(player);
   }
 
-  fn get_changes(&self) -> Vec<EntityField> {
+  fn get_changes(&self) -> u8 {
     self.entity.get_changes()
   }
 
