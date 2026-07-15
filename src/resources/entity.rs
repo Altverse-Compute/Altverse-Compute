@@ -137,17 +137,4 @@ impl Entity {
   pub fn clear_changes(&mut self) {
     self.changes = 0;
   }
-
-  // pub fn pack(&self) -> PackedEntity {
-  //   PackedEntity {
-  //     type_id: self.type_id as u32,
-  //     x: (self.pos.x * 2.0).round() as i32,
-  //     y: (self.pos.y * 2.0).round() as i32,
-  //     radius: (self.radius * 2.0).round().abs() as u32,
-  //     harmless: self.harmless,
-  //     state: self.state as u32,
-  //     state_metadata: (self.state_metadata * 2.0).round().abs() as u32,
-  //     alpha: (self.alpha * 20.0).round().abs() as u32,
-  //   }
-  // }
 }

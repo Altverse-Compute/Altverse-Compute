@@ -18,6 +18,70 @@ use crate::resources::entity::EntityField;
 use crate::resources::player::PlayerField;
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
 
+pub struct ByteWriter {
+  data: Vec<u8>,
+}
+
+impl ByteWriter {
+  pub fn new() -> Self {
+    Self { data: Vec::new() }
+  }
+
+  pub fn with_capacity(capacity: usize) -> Self {
+    Self {
+      data: Vec::with_capacity(capacity),
+    }
+  }
+
+  pub fn write_u8(&mut self, value: u8) {
+    self.data.push(value);
+  }
+
+  pub fn write_bool(&mut self, value: bool) {
+    self.data.push(value as u8);
+  }
+
+  pub fn write_u16(&mut self, value: u16) {
+    self.data.extend_from_slice(&value.to_le_bytes());
+  }
+
+  pub fn write_u32(&mut self, value: u32) {
+    self.data.extend_from_slice(&value.to_le_bytes());
+  }
+
+  pub fn write_u64(&mut self, value: u64) {
+    self.data.extend_from_slice(&value.to_le_bytes());
+  }
+
+  pub fn write_i16(&mut self, value: i16) {
+    self.data.extend_from_slice(&value.to_le_bytes());
+  }
+
+  pub fn write_i32(&mut self, value: i32) {
+    self.data.extend_from_slice(&value.to_le_bytes());
+  }
+
+  pub fn write_f32(&mut self, value: f32) {
+    self.data.extend_from_slice(&value.to_le_bytes());
+  }
+
+  pub fn write_bytes(&mut self, bytes: &[u8]) {
+    self.data.extend_from_slice(bytes);
+  }
+
+  pub fn into_inner(self) -> Vec<u8> {
+    self.data
+  }
+
+  pub fn as_slice(&self) -> &[u8] {
+    &self.data
+  }
+
+  pub fn clear(&mut self) {
+    self.data.clear();
+  }
+}
+
 fn build_packed_player<'a>(
   builder: &mut FlatBufferBuilder<'a>,
   hero_wrapper: &HeroWrapper,
@@ -100,17 +164,34 @@ fn build_partial_entity<'a>(
 ) -> WIPOffset<PartialEntity<'a>> {
   let entity = wrapper.entity();
   let mask = entity.get_changes();
+  let mut data = ByteWriter::new();
+  if (mask & EntityField::Pos as u8 != 0) || (mask & EntityField::Pos as u8 != 0) {
+    data.write_i16((entity.pos.x * 2f32) as i16);
+    data.write_i16((entity.pos.y * 2f32) as i16);
+  }
+  if mask & EntityField::Radius as u8 != 0 {
+    data.write_u16((entity.radius * 2f32) as u16);
+  }
+  if mask & EntityField::Harmless as u8 != 0 {
+    data.write_bool(entity.harmless);
+  }
+  if mask & EntityField::State as u8 != 0 {
+    data.write_u8(entity.state);
+  }
+  if mask & EntityField::StateMetadata as u8 != 0 {
+    data.write_u16((entity.state_metadata * 2f32) as u16);
+  }
+  if mask & EntityField::Alpha as u8 != 0 {
+    data.write_u8((entity.state_metadata * 255f32) as u8);
+  }
+
+  let data = builder.create_vector(&data.as_slice());
+
   PartialEntity::create(
     builder,
     &PartialEntityArgs {
-      x: (mask & EntityField::Pos as u8 != 0).then_some(entity.pos.x),
-      y: (mask & EntityField::Pos as u8 != 0).then_some(entity.pos.y),
-      radius: (mask & EntityField::Radius as u8 != 0).then_some(entity.radius),
-      harmless: (mask & EntityField::Harmless as u8 != 0).then_some(entity.harmless),
-      state: (mask & EntityField::State as u8 != 0).then_some(entity.state),
-      state_metadata: (mask & EntityField::StateMetadata as u8 != 0)
-        .then_some(entity.state_metadata),
-      alpha: (mask & EntityField::Alpha as u8 != 0).then_some((entity.alpha / 255f32) as u8),
+      mask: mask as u32,
+      data: Some(data),
     },
   )
 }
@@ -121,27 +202,52 @@ fn build_partial_player<'a>(
 ) -> WIPOffset<PartialPlayer<'a>> {
   let player = wrapper.player();
   let mask = player.get_changes();
-  let world = if (mask & PlayerField::World as u32 != 0) {
-    Some(builder.create_string(player.world.as_str()))
-  } else {
-    None
-  };
+
+  let mut data = ByteWriter::new();
+
+  if (mask & PlayerField::Pos as u32 != 0) || (mask & PlayerField::Pos as u32 != 0) {
+    data.write_i16((player.pos.x * 2f32) as i16);
+    data.write_i16((player.pos.y * 2f32) as i16);
+  }
+  if mask & PlayerField::Radius as u32 != 0 {
+    data.write_u16((player.radius * 2f32) as u16);
+  }
+  if mask & PlayerField::Speed as u32 != 0 {
+    data.write_u16((player.speed * 2f32) as u16);
+  }
+  if mask & PlayerField::Energy as u32 != 0 {
+    data.write_u16((player.energy * 2f32) as u16);
+  }
+  if mask & PlayerField::MaxEnergy as u32 != 0 {
+    data.write_u16((player.max_energy * 2f32) as u16);
+  }
+  if mask & PlayerField::DeathTimer as u32 != 0 {
+    data.write_u16((player.death_timer * 2f32) as u16);
+  }
+  if mask & PlayerField::State as u32 != 0 {
+    data.write_u8(player.state);
+  }
+  if mask & PlayerField::StateMeta as u32 != 0 {
+    data.write_u16((player.state_meta * 2f32) as u16);
+  }
+  if mask & PlayerField::Area as u32 != 0 {
+    data.write_u64(player.area);
+  }
+  if mask & PlayerField::World as u32 != 0 {
+    data.write_u32(player.world.len() as u32);
+    data.write_bytes(player.world.as_bytes());
+  }
+  if mask & PlayerField::Downed as u32 != 0 {
+    data.write_bool(player.downed);
+  }
+
+  let data = builder.create_vector(&data.as_slice());
 
   PartialPlayer::create(
     builder,
     &PartialPlayerArgs {
-      x: (mask & PlayerField::Pos as u32 != 0).then_some(player.pos.x),
-      y: (mask & PlayerField::Pos as u32 != 0).then_some(player.pos.y),
-      radius: (mask & PlayerField::Radius as u32 != 0).then_some(player.radius),
-      speed: (mask & PlayerField::Speed as u32 != 0).then_some(player.speed),
-      energy: (mask & PlayerField::Energy as u32 != 0).then_some(player.energy),
-      max_energy: (mask & PlayerField::MaxEnergy as u32 != 0).then_some(player.max_energy),
-      death_timer: (mask & PlayerField::DeathTimer as u32 != 0).then_some(player.death_timer),
-      state: (mask & PlayerField::State as u32 != 0).then_some(player.state),
-      state_metadata: (mask & PlayerField::StateMeta as u32 != 0).then_some(player.state_meta),
-      area: (mask & PlayerField::Area as u32 != 0).then_some(player.area),
-      world,
-      died: (mask & PlayerField::Downed as u32 != 0).then_some(player.downed),
+      mask,
+      data: Some(data),
     },
   )
 }

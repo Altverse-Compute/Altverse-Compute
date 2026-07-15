@@ -201,24 +201,4 @@ impl Player {
   pub fn clear_changes(&mut self) {
     self.changes = 0;
   }
-
-  // pub fn pack(&self) -> PackedPlayer {
-  //   PackedPlayer {
-  //     id: self.id as u32,
-  //     name: self.name.clone(),
-  //     x: (self.pos.x * 2.0).round() as i32,
-  //     y: (self.pos.y * 2.0).round() as i32,
-  //     radius: (self.radius * 2.0).round().abs() as u32,
-  //     speed: (self.speed * 2.0).round().abs() as u32,
-  //     energy: (self.energy * 2.0).round().abs() as u32,
-  //     max_energy: (self.max_energy * 2.0).round().abs() as u32,
-  //     death_timer: self.death_timer.round() as u32,
-  //     state: self.state as u32,
-  //     area: self.area as u32,
-  //     world: self.world.clone(),
-  //     died: self.downed,
-  //     state_meta: (self.state_meta * 2.0).round().abs() as u32,
-  //     hero: self.hero,
-  //   }
-  // }
 }
