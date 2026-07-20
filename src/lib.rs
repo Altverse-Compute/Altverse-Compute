@@ -11,9 +11,9 @@ use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use chrono::Utc;
 use lazy_static::lazy_static;
-use napi::bindgen_prelude::Function;
 use napi::bindgen_prelude::Object;
 use napi::bindgen_prelude::{Buffer, Null};
+use napi::bindgen_prelude::{Function, Uint8Array};
 use napi::{Env, Error};
 use napi_derive::napi;
 use std::sync::Mutex;
@@ -28,6 +28,7 @@ mod config;
 mod fbs;
 mod managers;
 mod props;
+mod pulse_gen;
 mod resources;
 
 lazy_static! {
@@ -150,12 +151,10 @@ impl ComputeEngine {
     let mut object = Object::new(env)?;
 
     for (key, value) in self.network_bus.direct_clients.iter_mut() {
-      let result = build_packages(value, &mut self.players_manager, &mut self.worlds_manager);
-      value.flat_builder.finish(result, None);
-      let uint8 = Buffer::from(value.flat_builder.finished_data());
-      let _ = object.set(key.to_string(), uint8);
+      build_packages(value, &mut self.players_manager, &mut self.worlds_manager);
+      let _ = object.set(key.to_string(), Buffer::from(value.builder.to_vec()));
       value.packages.clear();
-      value.flat_builder.reset();
+      value.builder.clear();
     }
 
     self.network_bus.clear_packages();

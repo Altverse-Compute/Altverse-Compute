@@ -1,613 +1,400 @@
 use crate::bus::Client;
-use crate::fbs::{Chat as OwnChat, Package as OwnPackage, PackedArea as OwnPackedArea};
-use crate::flat::altverse_server::{
-  Chat, ChatArgs, CloseEntities, CloseEntitiesArgs, ClosePlayer, ClosePlayerArgs, Entities,
-  EntitiesArgs, Package, PackageArgs, PackageKind, Packages, PackagesArgs, PackedArea,
-  PackedAreaArgs, PackedEntity, PackedEntityArgs, PackedEntityMap, PackedEntityMapArgs,
-  PackedPlayer, PackedPlayerArgs, PackedPlayerMap, PackedPlayerMapArgs, PartialEntity,
-  PartialEntityArgs, PartialEntityMap, PartialEntityMapArgs, PartialPlayer, PartialPlayerArgs,
-  PartialPlayerMap, PartialPlayerMapArgs, Players, PlayersArgs, Role, UpdateEntities,
-  UpdateEntitiesArgs, UpdatePlayers, UpdatePlayersArgs,
-};
+use crate::fbs::Package::{self as OwnPackage};
 use crate::managers::player::PlayersManager;
 use crate::managers::world::WorldsManager;
+use crate::pulse_gen::{
+  Chat, CloseEntities, ClosePlayer, Entities, Package, Packages, PackedArea, PackedEntity,
+  PackedPlayer, PartialEntity, PartialPlayer, Players, UpdateEntities, UpdatePlayers,
+};
 use crate::resources::area::Area;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::EntityField;
 use crate::resources::player::PlayerField;
-use flatbuffers::{FlatBufferBuilder, WIPOffset};
 
-pub struct ByteWriter {
-  data: Vec<u8>,
-}
-
-impl ByteWriter {
-  pub fn new() -> Self {
-    Self { data: Vec::new() }
-  }
-
-  pub fn with_capacity(capacity: usize) -> Self {
-    Self {
-      data: Vec::with_capacity(capacity),
-    }
-  }
-
-  pub fn write_u8(&mut self, value: u8) {
-    self.data.push(value);
-  }
-
-  pub fn write_bool(&mut self, value: bool) {
-    self.data.push(value as u8);
-  }
-
-  pub fn write_u16(&mut self, value: u16) {
-    self.data.extend_from_slice(&value.to_le_bytes());
-  }
-
-  pub fn write_u32(&mut self, value: u32) {
-    self.data.extend_from_slice(&value.to_le_bytes());
-  }
-
-  pub fn write_u64(&mut self, value: u64) {
-    self.data.extend_from_slice(&value.to_le_bytes());
-  }
-
-  pub fn write_i16(&mut self, value: i16) {
-    self.data.extend_from_slice(&value.to_le_bytes());
-  }
-
-  pub fn write_i32(&mut self, value: i32) {
-    self.data.extend_from_slice(&value.to_le_bytes());
-  }
-
-  pub fn write_f32(&mut self, value: f32) {
-    self.data.extend_from_slice(&value.to_le_bytes());
-  }
-
-  pub fn write_bytes(&mut self, bytes: &[u8]) {
-    self.data.extend_from_slice(bytes);
-  }
-
-  pub fn into_inner(self) -> Vec<u8> {
-    self.data
-  }
-
-  pub fn as_slice(&self) -> &[u8] {
-    &self.data
-  }
-
-  pub fn clear(&mut self) {
-    self.data.clear();
-  }
-}
-
-fn build_packed_player<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  hero_wrapper: &HeroWrapper,
-) -> WIPOffset<PackedPlayer<'a>> {
+fn packaged_player(hero_wrapper: &HeroWrapper) -> PackedPlayer {
   let player = hero_wrapper.player();
-  let name = builder.create_string(player.name.as_str());
-  let world = builder.create_string(player.world.as_str());
-  PackedPlayer::create(
-    builder,
-    &PackedPlayerArgs {
-      name: Some(name),
-      id: player.id,
-      x: player.pos.x,
-      y: player.pos.y,
-      radius: player.radius,
-      speed: player.speed,
-      energy: player.energy,
-      max_energy: player.max_energy,
-      death_timer: player.death_timer,
-      state: player.state,
-      state_meta: player.state_meta,
-      area: player.area,
-      world: Some(world),
-      died: player.downed,
-      hero: player.hero,
-    },
-  )
+  PackedPlayer {
+    id: player.id,
+    name: player.name.clone(),
+    x: player.pos.x,
+    y: player.pos.y,
+    radius: player.radius,
+    speed: player.speed,
+    energy: player.energy,
+    max_energy: player.max_energy,
+    death_timer: player.death_timer,
+    state: player.state,
+    state_meta: player.state_meta,
+    area: player.area as u32,
+    world: player.world.clone(),
+    downed: player.downed,
+    hero: player.hero,
+  }
 }
 
-pub fn build_new_player<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  hero_wrapper: &HeroWrapper,
-) -> WIPOffset<Package<'a>> {
-  let kind = build_packed_player(builder, hero_wrapper);
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type: PackageKind::new_player,
-      kind: Some(kind.as_union_value()),
+fn partial_player(hero_wrapper: &HeroWrapper) -> PartialPlayer {
+  let player = hero_wrapper.player();
+  let mask = player.changes;
+  PartialPlayer {
+    id: player.id,
+    name: if mask & PlayerField::Name as u32 != 0 {
+      Some(player.name.clone())
+    } else {
+      None
     },
-  )
+    x: if mask & PlayerField::Pos as u32 != 0 {
+      Some(player.pos.x)
+    } else {
+      None
+    },
+    y: if mask & PlayerField::Pos as u32 != 0 {
+      Some(player.pos.y)
+    } else {
+      None
+    },
+    radius: if mask & PlayerField::Radius as u32 != 0 {
+      Some(player.radius)
+    } else {
+      None
+    },
+    speed: if mask & PlayerField::Speed as u32 != 0 {
+      Some(player.speed)
+    } else {
+      None
+    },
+    energy: if mask & PlayerField::Energy as u32 != 0 {
+      Some(player.energy)
+    } else {
+      None
+    },
+    max_energy: if mask & PlayerField::MaxEnergy as u32 != 0 {
+      Some(player.max_energy)
+    } else {
+      None
+    },
+    death_timer: if mask & PlayerField::DeathTimer as u32 != 0 {
+      Some(player.death_timer)
+    } else {
+      None
+    },
+    state: if mask & PlayerField::State as u32 != 0 {
+      Some(player.state)
+    } else {
+      None
+    },
+    state_meta: if mask & PlayerField::StateMeta as u32 != 0 {
+      Some(player.state_meta)
+    } else {
+      None
+    },
+    area: if mask & PlayerField::Area as u32 != 0 {
+      Some(player.area as u32)
+    } else {
+      None
+    },
+    world: if mask & PlayerField::World as u32 != 0 {
+      Some(player.world.clone())
+    } else {
+      None
+    },
+    downed: if mask & PlayerField::Downed as u32 != 0 {
+      Some(player.downed)
+    } else {
+      None
+    },
+  }
 }
 
-pub fn build_new_entity<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  hero_wrapper: &EntityWrapper,
-) -> WIPOffset<PackedEntity<'a>> {
-  let entity = hero_wrapper.entity();
-
-  PackedEntity::create(
-    builder,
-    &PackedEntityArgs {
-      type_id: entity.type_id,
-      x: entity.pos.x,
-      y: entity.pos.y,
-      radius: entity.radius,
-      harmless: entity.harmless,
-      state: entity.state,
-      state_metadata: entity.state_metadata,
-      alpha: entity.alpha,
-    },
-  )
+fn packaged_entity(entity_wrapper: &EntityWrapper) -> PackedEntity {
+  let entity = entity_wrapper.entity();
+  PackedEntity {
+    id: entity.id,
+    type_id: entity.type_id as u32,
+    x: entity.pos.x,
+    y: entity.pos.y,
+    radius: entity.radius,
+    harmless: entity.harmless,
+    state: entity.state,
+    state_meta: entity.state_metadata,
+    alpha: entity.alpha,
+  }
 }
 
-fn build_close_player<'a>(builder: &mut FlatBufferBuilder<'a>, id: u64) -> WIPOffset<Package<'a>> {
-  let close_player = ClosePlayer::create(builder, &ClosePlayerArgs { id: id });
-
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type: PackageKind::close_player,
-      kind: Some(close_player.as_union_value()),
+fn partial_entity(entity_wrapper: &EntityWrapper) -> PartialEntity {
+  let entity = entity_wrapper.entity();
+  let mask = entity.changes;
+  PartialEntity {
+    id: entity.id,
+    x: if mask & EntityField::Pos as u8 != 0 {
+      Some(entity.pos.x)
+    } else {
+      None
     },
-  )
+    y: if mask & EntityField::Pos as u8 != 0 {
+      Some(entity.pos.y)
+    } else {
+      None
+    },
+    radius: if mask & EntityField::Radius as u8 != 0 {
+      Some(entity.radius)
+    } else {
+      None
+    },
+    harmless: if mask & EntityField::Harmless as u8 != 0 {
+      Some(entity.harmless)
+    } else {
+      None
+    },
+    state: if mask & EntityField::State as u8 != 0 {
+      Some(entity.state)
+    } else {
+      None
+    },
+    state_meta: if mask & EntityField::StateMetadata as u8 != 0 {
+      Some(entity.state_metadata)
+    } else {
+      None
+    },
+    alpha: if mask & EntityField::Alpha as u8 != 0 {
+      Some(entity.alpha)
+    } else {
+      None
+    },
+  }
 }
 
-fn build_partial_entity<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  wrapper: &EntityWrapper,
-) -> WIPOffset<PartialEntity<'a>> {
-  let entity = wrapper.entity();
-  let mask = entity.get_changes();
-  let mut data = ByteWriter::new();
-  if (mask & EntityField::Pos as u8 != 0) || (mask & EntityField::Pos as u8 != 0) {
-    data.write_i16((entity.pos.x * 2f32) as i16);
-    data.write_i16((entity.pos.y * 2f32) as i16);
+fn area_init(area: &Area, world_name: String, area_id: u32) -> PackedArea {
+  PackedArea {
+    w: area.raw_area.w,
+    h: area.raw_area.h,
+    area: area_id,
+    world: world_name.clone(),
+    entities: area.entities.iter().map(|f| packaged_entity(f.1)).collect(),
   }
-  if mask & EntityField::Radius as u8 != 0 {
-    data.write_u16((entity.radius * 2f32) as u16);
-  }
-  if mask & EntityField::Harmless as u8 != 0 {
-    data.write_bool(entity.harmless);
-  }
-  if mask & EntityField::State as u8 != 0 {
-    data.write_u8(entity.state);
-  }
-  if mask & EntityField::StateMetadata as u8 != 0 {
-    data.write_u16((entity.state_metadata * 2f32) as u16);
-  }
-  if mask & EntityField::Alpha as u8 != 0 {
-    data.write_u8((entity.state_metadata * 255f32) as u8);
-  }
-
-  let data = builder.create_vector(&data.as_slice());
-
-  PartialEntity::create(
-    builder,
-    &PartialEntityArgs {
-      mask: mask as u32,
-      data: Some(data),
-    },
-  )
-}
-
-fn build_partial_player<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  wrapper: &HeroWrapper,
-) -> WIPOffset<PartialPlayer<'a>> {
-  let player = wrapper.player();
-  let mask = player.get_changes();
-
-  let mut data = ByteWriter::new();
-
-  if (mask & PlayerField::Pos as u32 != 0) || (mask & PlayerField::Pos as u32 != 0) {
-    data.write_i16((player.pos.x * 2f32) as i16);
-    data.write_i16((player.pos.y * 2f32) as i16);
-  }
-  if mask & PlayerField::Radius as u32 != 0 {
-    data.write_u16((player.radius * 2f32) as u16);
-  }
-  if mask & PlayerField::Speed as u32 != 0 {
-    data.write_u16((player.speed * 2f32) as u16);
-  }
-  if mask & PlayerField::Energy as u32 != 0 {
-    data.write_u16((player.energy * 2f32) as u16);
-  }
-  if mask & PlayerField::MaxEnergy as u32 != 0 {
-    data.write_u16((player.max_energy * 2f32) as u16);
-  }
-  if mask & PlayerField::DeathTimer as u32 != 0 {
-    data.write_u16((player.death_timer * 2f32) as u16);
-  }
-  if mask & PlayerField::State as u32 != 0 {
-    data.write_u8(player.state);
-  }
-  if mask & PlayerField::StateMeta as u32 != 0 {
-    data.write_u16((player.state_meta * 2f32) as u16);
-  }
-  if mask & PlayerField::Area as u32 != 0 {
-    data.write_u64(player.area);
-  }
-  if mask & PlayerField::World as u32 != 0 {
-    data.write_u32(player.world.len() as u32);
-    data.write_bytes(player.world.as_bytes());
-  }
-  if mask & PlayerField::Downed as u32 != 0 {
-    data.write_bool(player.downed);
-  }
-
-  let data = builder.create_vector(&data.as_slice());
-
-  PartialPlayer::create(
-    builder,
-    &PartialPlayerArgs {
-      mask,
-      data: Some(data),
-    },
-  )
-}
-
-fn build_players<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  players_manager: &PlayersManager,
-  ids: Vec<u64>,
-  kind_type: PackageKind,
-) -> WIPOffset<Package<'a>> {
-  let mut players = Vec::new();
-  for id in ids {
-    match players_manager.get_player(id) {
-      Some(player) => {
-        let builded_partial = build_packed_player(builder, player);
-        let pack = PackedPlayerMap::create(
-          builder,
-          &PackedPlayerMapArgs {
-            key: id,
-            value: Some(builded_partial),
-          },
-        );
-        players.push(pack);
-      }
-      None => {}
-    }
-  }
-  let partials = builder.create_vector(&players);
-
-  let update_players = Players::create(
-    builder,
-    &PlayersArgs {
-      players: Some(partials),
-    },
-  );
-
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type,
-      kind: Some(update_players.as_union_value()),
-    },
-  )
-}
-
-fn build_update_players<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  players_manager: &PlayersManager,
-  ids: Vec<u64>,
-) -> WIPOffset<Package<'a>> {
-  let mut players = Vec::new();
-  for id in ids {
-    match players_manager.get_player(id) {
-      Some(player) => {
-        let builded_partial = build_partial_player(builder, player);
-        let pack = PartialPlayerMap::create(
-          builder,
-          &PartialPlayerMapArgs {
-            key: id,
-            value: Some(builded_partial),
-          },
-        );
-        players.push(pack);
-      }
-      None => {}
-    }
-  }
-  let partials = builder.create_vector(&players);
-
-  let update_players = UpdatePlayers::create(
-    builder,
-    &UpdatePlayersArgs {
-      items: Some(partials),
-    },
-  );
-
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type: PackageKind::update_players,
-      kind: Some(update_players.as_union_value()),
-    },
-  )
-}
-
-fn build_myself<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  player: &HeroWrapper,
-) -> WIPOffset<Package<'a>> {
-  let packed_player = build_packed_player(builder, player);
-
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type: PackageKind::myself,
-      kind: Some(packed_player.as_union_value()),
-    },
-  )
-}
-
-fn build_new_entities<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  area: &Area,
-  ids: Vec<u64>,
-) -> WIPOffset<Package<'a>> {
-  let mut players = Vec::new();
-  for id in ids {
-    match area.entities.get(&id) {
-      Some(entity) => {
-        let builded_partial = build_new_entity(builder, entity);
-        let pack = PackedEntityMap::create(
-          builder,
-          &PackedEntityMapArgs {
-            key: id,
-            value: Some(builded_partial),
-          },
-        );
-        players.push(pack);
-      }
-      None => {}
-    }
-  }
-  let partials = builder.create_vector(&players);
-
-  let update_players = Entities::create(
-    builder,
-    &EntitiesArgs {
-      entities: Some(partials),
-    },
-  );
-
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type: PackageKind::new_entities,
-      kind: Some(update_players.as_union_value()),
-    },
-  )
-}
-
-fn build_update_entities<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  area: &Area,
-  ids: Vec<u64>,
-) -> WIPOffset<Package<'a>> {
-  let mut players = Vec::new();
-  for id in ids {
-    match area.entities.get(&id) {
-      Some(entity) => {
-        let builded_partial = build_partial_entity(builder, entity);
-        let pack = PartialEntityMap::create(
-          builder,
-          &PartialEntityMapArgs {
-            key: id,
-            value: Some(builded_partial),
-          },
-        );
-        players.push(pack);
-      }
-      None => {}
-    }
-  }
-  let partials = builder.create_vector(&players);
-
-  let update_players = UpdateEntities::create(
-    builder,
-    &UpdateEntitiesArgs {
-      items: Some(partials),
-    },
-  );
-
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type: PackageKind::update_entities,
-      kind: Some(update_players.as_union_value()),
-    },
-  )
-}
-
-fn build_close_entities<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  ids: Vec<u64>,
-) -> WIPOffset<Package<'a>> {
-  let partials = builder.create_vector(&ids);
-
-  let close_entities = CloseEntities::create(
-    builder,
-    &CloseEntitiesArgs {
-      ids: Some(partials),
-    },
-  );
-
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type: PackageKind::close_entities,
-      kind: Some(close_entities.as_union_value()),
-    },
-  )
-}
-
-fn build_area_init<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  area: &Area,
-  area_props: &OwnPackedArea,
-) -> WIPOffset<Package<'a>> {
-  let mut players = Vec::new();
-  let ids = area_props.entities.clone();
-  for id in ids {
-    match area.entities.get(&id) {
-      Some(entity) => {
-        let builded_partial = build_new_entity(builder, entity);
-        let pack = PackedEntityMap::create(
-          builder,
-          &PackedEntityMapArgs {
-            key: id,
-            value: Some(builded_partial),
-          },
-        );
-        players.push(pack);
-      }
-      None => {}
-    }
-  }
-
-  let world = builder.create_string(area_props.world.as_str());
-  let partials = builder.create_vector(&players);
-
-  let update_players = PackedArea::create(
-    builder,
-    &PackedAreaArgs {
-      w: area_props.w,
-      h: area_props.h,
-      area: area_props.area,
-      world: Some(world),
-      entities: Some(partials),
-    },
-  );
-
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type: PackageKind::area_init,
-      kind: Some(update_players.as_union_value()),
-    },
-  )
-}
-
-fn build_chat_message<'a>(
-  builder: &mut FlatBufferBuilder<'a>,
-  message: &OwnChat,
-) -> WIPOffset<Package<'a>> {
-  let content = builder.create_string(message.content.as_str());
-  let author = builder.create_string(message.author.as_str());
-  let world = builder.create_string(message.world.as_str());
-  let message = Chat::create(
-    builder,
-    &ChatArgs {
-      id: message.id,
-      content: Some(content),
-      author: Some(author),
-      role: Role::User,
-      world: Some(world),
-    },
-  );
-
-  Package::create(
-    builder,
-    &PackageArgs {
-      kind_type: PackageKind::chat,
-      kind: Some(message.as_union_value()),
-    },
-  )
 }
 
 pub fn build_packages<'a>(
   client: &mut Client,
   players_manager: &PlayersManager,
   worlds_manager: &WorldsManager,
-) -> WIPOffset<Packages<'a>> {
-  let mut packages = Vec::new();
+) {
+  let builder = &mut client.builder;
+  let mut packages = Vec::<Package>::new();
   for package in client.packages.clone() {
     match package {
       OwnPackage::NewPlayer(id) => match players_manager.get_player(id) {
         Some(player) => {
-          packages.push(build_new_player(&mut client.flat_builder, player));
+          packages.push(Package {
+            new_player: Some(packaged_player(player)),
+            close_player: None,
+            players: None,
+            new_entities: None,
+            close_entities: None,
+            area_init: None,
+            myself: None,
+            update_entities: None,
+            update_players: None,
+            chat: None,
+          });
         }
         None => {}
       },
-      OwnPackage::ClosePlayer(id) => {
-        packages.push(build_close_player(&mut client.flat_builder, id))
-      }
+      OwnPackage::ClosePlayer(id) => packages.push(Package {
+        new_player: None,
+        close_player: Some(ClosePlayer { id: id as u32 }),
+        players: None,
+        new_entities: None,
+        close_entities: None,
+        area_init: None,
+        myself: None,
+        update_entities: None,
+        update_players: None,
+        chat: None,
+      }),
       OwnPackage::Players(ids) => {
-        packages.push(build_players(
-          &mut client.flat_builder,
-          players_manager,
-          ids,
-          PackageKind::players,
-        ));
+        let mut packed_players = Vec::<PackedPlayer>::new();
+        for id in ids {
+          if let Some(player) = players_manager.get_player(id) {
+            packed_players.push(packaged_player(player));
+          }
+        }
+        packages.push(Package {
+          new_player: None,
+          close_player: None,
+          players: Some(Players {
+            players: packed_players,
+          }),
+          new_entities: None,
+          close_entities: None,
+          area_init: None,
+          myself: None,
+          update_entities: None,
+          update_players: None,
+          chat: None,
+        });
       }
       OwnPackage::UpdatePlayers(ids) => {
-        packages.push(build_update_players(
-          &mut client.flat_builder,
-          players_manager,
-          ids,
-        ));
+        let mut partial_players = Vec::<PartialPlayer>::new();
+        for id in ids {
+          if let Some(player) = players_manager.get_player(id) {
+            partial_players.push(partial_player(player));
+          }
+        }
+        packages.push(Package {
+          new_player: None,
+          close_player: None,
+          players: None,
+          new_entities: None,
+          close_entities: None,
+          area_init: None,
+          myself: None,
+          update_entities: None,
+          update_players: Some(UpdatePlayers {
+            items: partial_players,
+          }),
+          chat: None,
+        });
       }
       OwnPackage::Myself(id) => {
-        packages.push(build_myself(
-          &mut client.flat_builder,
-          players_manager.get_player(id).unwrap(),
-        ));
+        if let Some(player) = players_manager.get_player(id) {
+          packages.push(Package {
+            new_player: None,
+            close_player: None,
+            players: None,
+            new_entities: None,
+            close_entities: None,
+            area_init: None,
+            myself: Some(packaged_player(player)),
+            update_entities: None,
+            update_players: None,
+            chat: None,
+          });
+        }
       }
-      OwnPackage::NewEntities((ids, world, area)) => packages.push(build_new_entities(
-        &mut client.flat_builder,
-        worlds_manager
+      OwnPackage::NewEntities((ids, world, area)) => {
+        let mut packed_entities = Vec::<PackedEntity>::new();
+        let area = worlds_manager
           .worlds
           .get(&world)
           .unwrap()
           .areas
           .get(area)
-          .unwrap(),
-        ids,
-      )),
-      OwnPackage::UpdateEntities((ids, world, area)) => packages.push(build_update_entities(
-        &mut client.flat_builder,
-        worlds_manager
+          .unwrap();
+        for id in ids {
+          if let Some(entity) = area.entities.get(&id) {
+            packed_entities.push(packaged_entity(entity));
+          }
+        }
+        packages.push(Package {
+          new_player: None,
+          close_player: None,
+          players: None,
+          new_entities: Some(Entities {
+            entities: packed_entities,
+          }),
+          close_entities: None,
+          area_init: None,
+          myself: None,
+          update_entities: None,
+          update_players: None,
+          chat: None,
+        });
+      }
+      OwnPackage::UpdateEntities((ids, world, area)) => {
+        let mut partial_entities = Vec::<PartialEntity>::new();
+        let area = worlds_manager
           .worlds
           .get(&world)
           .unwrap()
           .areas
           .get(area)
-          .unwrap(),
-        ids,
-      )),
+          .unwrap();
+        for id in ids {
+          if let Some(entity) = area.entities.get(&id) {
+            partial_entities.push(partial_entity(entity));
+          }
+        }
+        packages.push(Package {
+          new_player: None,
+          close_player: None,
+          players: None,
+          new_entities: None,
+          close_entities: None,
+          area_init: None,
+          myself: None,
+          update_entities: Some(UpdateEntities {
+            items: partial_entities,
+          }),
+          update_players: None,
+          chat: None,
+        });
+      }
       OwnPackage::CloseEntities(ids) => {
-        packages.push(build_close_entities(&mut client.flat_builder, ids))
+        packages.push(Package {
+          new_player: None,
+          close_player: None,
+          players: None,
+          new_entities: None,
+          close_entities: Some(CloseEntities {
+            ids: ids.iter().map(|f| *f as u32).collect(),
+          }),
+          area_init: None,
+          myself: None,
+          update_entities: None,
+          update_players: None,
+          chat: None,
+        });
       }
-      OwnPackage::AreaInit(area) => packages.push(build_area_init(
-        &mut client.flat_builder,
-        worlds_manager
-          .worlds
-          .get(&area.world)
-          .unwrap()
-          .areas
-          .get(area.area as usize)
-          .unwrap(),
-        &area,
-      )),
+      OwnPackage::AreaInit(area) => {
+        let init = area_init(
+          worlds_manager
+            .worlds
+            .get(&area.world)
+            .unwrap()
+            .areas
+            .get(area.area as usize)
+            .unwrap(),
+          area.world,
+          area.area,
+        );
+
+        packages.push(Package {
+          new_player: None,
+          close_player: None,
+          players: None,
+          new_entities: None,
+          close_entities: None,
+          area_init: Some(init),
+          myself: None,
+          update_entities: None,
+          update_players: None,
+          chat: None,
+        });
+      }
       OwnPackage::Chat(message) => {
-        packages.push(build_chat_message(&mut client.flat_builder, &message))
+        let chat = Chat {
+          id: message.id,
+          content: message.content,
+          author: message.author,
+          world: message.world,
+        };
+
+        packages.push(Package {
+          new_player: None,
+          close_player: None,
+          players: None,
+          new_entities: None,
+          close_entities: None,
+          area_init: None,
+          myself: None,
+          update_entities: None,
+          update_players: None,
+          chat: Some(chat),
+        });
       }
     }
   }
 
-  let items = client.flat_builder.create_vector(&packages);
-
-  Packages::create(
-    &mut client.flat_builder,
-    &PackagesArgs { items: Some(items) },
-  )
+  Packages::write_package(&Packages { items: packages }, builder);
 }

@@ -1,5 +1,6 @@
 use crate::fbs::Package;
 use crate::managers::player::PlayersManager;
+use crate::pulse_gen::BufferWriter;
 use crate::resources::assets::effect::PlayerEffectWrapper;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::utils::input::Input;
@@ -10,7 +11,7 @@ use std::collections::HashMap;
 pub struct Client {
   pub packages: Vec<Package>,
   pub input: Input,
-  pub flat_builder: FlatBufferBuilder<'static>,
+  pub builder: BufferWriter,
 }
 
 pub struct NetworkBus {
@@ -30,7 +31,7 @@ impl NetworkBus {
       Client {
         input: Input::new(),
         packages: Vec::new(),
-        flat_builder: FlatBufferBuilder::new(),
+        builder: BufferWriter::new(16000usize),
       },
     );
   }
