@@ -1,4 +1,5 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::FLAME_ID;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
@@ -12,8 +13,8 @@ pub struct Flame {
 
 impl Flame {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
-    let mut entity = Entity::new(props);
-    entity.type_id = 18;
+    let mut entity: Entity = Entity::new(props);
+    entity.type_id = FLAME_ID;
     Self { entity, timer: 0.0 }
   }
 }

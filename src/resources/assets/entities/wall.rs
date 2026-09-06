@@ -1,4 +1,5 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::WALL_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::utils::vector::Vector;
@@ -18,7 +19,7 @@ struct Around {
 impl Wall {
   pub fn new(props: EntityProps, additional: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props.clone());
-    entity.type_id = 1;
+    entity.type_id = WALL_ID;
     let mut dir_act = 1;
     if additional.inverse {
       dir_act = -1;

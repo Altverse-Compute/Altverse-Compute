@@ -2,7 +2,7 @@
 use crate::builder::build_packages;
 use crate::bus::{EventBus, NetworkBus};
 use crate::config::Config;
-use crate::fbs::{Chat, Package, Role};
+use crate::managers::chat::ChatManager;
 use crate::managers::player::PlayersManager;
 use crate::managers::world::WorldsManager;
 use crate::props::EngineProps;
@@ -11,16 +11,12 @@ use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use chrono::Utc;
 use lazy_static::lazy_static;
+use napi::bindgen_prelude::Function;
 use napi::bindgen_prelude::Object;
 use napi::bindgen_prelude::{Buffer, Null};
-use napi::bindgen_prelude::{Function, Uint8Array};
 use napi::{Env, Error};
 use napi_derive::napi;
 use std::sync::Mutex;
-
-pub mod flat {
-  include!("proto/gen/flat/game_generated.rs");
-}
 
 mod builder;
 mod bus;
@@ -88,15 +84,13 @@ impl ComputeEngine {
 
   #[napi]
   pub fn chat_message(&mut self, content: String, id: i64) {
-    if let Some(hero) = self.players_manager.get_player(id as u64) {
-      self.network_bus.add_global_package(Package::Chat(Chat {
-        id: id.try_into().unwrap(),
-        content,
-        author: hero.player().name.clone(),
-        role: Role::User,
-        world: hero.player().world.clone(),
-      }))
-    }
+    ChatManager::message(
+      &mut self.network_bus,
+      &mut self.players_manager,
+      &mut self.worlds_manager,
+      content,
+      id,
+    );
   }
 
   #[napi]
@@ -153,8 +147,8 @@ impl ComputeEngine {
     for (key, value) in self.network_bus.direct_clients.iter_mut() {
       build_packages(value, &mut self.players_manager, &mut self.worlds_manager);
       let _ = object.set(key.to_string(), Buffer::from(value.builder.to_vec()));
-      value.packages.clear();
       value.builder.clear();
+      value.packages.clear();
     }
 
     self.network_bus.clear_packages();

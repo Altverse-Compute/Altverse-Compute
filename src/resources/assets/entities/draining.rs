@@ -1,5 +1,6 @@
 use crate::bus::PlayerEvent;
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::DRAINING_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
@@ -13,7 +14,7 @@ pub struct Draining {
 impl Draining {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = 26;
+    entity.type_id = DRAINING_ID;
     entity.state = 1;
     entity.state_metadata = 150.0;
     entity.aura = 150.0;

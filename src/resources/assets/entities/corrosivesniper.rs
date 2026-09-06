@@ -1,24 +1,24 @@
 use crate::resources::assets::entities::EntityLogic;
-use crate::resources::assets::entities::ids::{HOMING_BULLET_ID, HOMING_SNIPER_ID};
+use crate::resources::assets::entities::corrosive::Corrosive;
+use crate::resources::assets::entities::ids::{
+  BULLET_ID, CORROSIVE_BULLET_ID, CORROSIVE_SNIPER_ID, SNIPER_ID,
+};
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::{Entity, EntityField};
+use crate::resources::entity::Entity;
 use crate::resources::player::Player;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance, random};
 
 #[derive(Clone)]
-pub struct HomingSniper {
+pub struct CorrosiveSniper {
   entity: Entity,
   timer: f32,
 }
 
-const MAX_DIST: f32 = 5.625 * 32.0;
-const ANGLE_INCREMENT: f32 = 0.04;
-
-impl HomingSniper {
+impl CorrosiveSniper {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = HOMING_SNIPER_ID;
+    entity.type_id = CORROSIVE_SNIPER_ID;
     Self {
       entity,
       timer: random(0.0, 3000.0),
@@ -26,7 +26,7 @@ impl HomingSniper {
   }
 }
 
-impl EntityLogic for HomingSniper {
+impl EntityLogic for CorrosiveSniper {
   fn update(&mut self, props: &mut EntityUpdateProps) {
     self.entity.update(props);
     self.entity.collide();
@@ -54,7 +54,7 @@ impl EntityLogic for HomingSniper {
         if let Some(target) = target {
           let angl = (target.pos.y - self.entity.pos.y).atan2(target.pos.x - self.entity.pos.x);
 
-          let mut bullet = HomingBullet::new(
+          let mut bullet = CorrosiveBullet::new(
             EntityProps {
               id: 1,
               type_id: 3,
@@ -75,7 +75,7 @@ impl EntityLogic for HomingSniper {
 
           props
             .event_bus
-            .add_entity(EntityWrapper::HomingBullet(bullet));
+            .add_entity(EntityWrapper::CorrosiveBullet(bullet));
 
           self.timer = 0.0;
         }
@@ -105,13 +105,13 @@ impl EntityLogic for HomingSniper {
 }
 
 #[derive(Clone)]
-pub struct HomingBullet {
+pub struct CorrosiveBullet {
   pub entity: Entity,
 }
-impl HomingBullet {
+impl CorrosiveBullet {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props.clone());
-    entity.type_id = HOMING_BULLET_ID;
+    entity.type_id = CORROSIVE_BULLET_ID;
     Self { entity }
   }
   fn collide(entity: &mut Entity) {
@@ -130,49 +130,26 @@ impl HomingBullet {
   }
 }
 
-impl EntityLogic for HomingBullet {
+impl EntityLogic for CorrosiveBullet {
   fn update(&mut self, props: &mut EntityUpdateProps) {
-    let mut target: Option<&&Player> = None;
-    let mut last_distance = MAX_DIST;
-    for player in props.players.iter() {
-      if player.pos.x > -player.radius
-        && player.pos.x - player.radius < self.entity.boundary.w
-        && !player.downed
-      {
-        let dist = distance(
-          player.pos.x - self.entity.pos.x,
-          player.pos.y - self.entity.pos.y,
-        );
-        if dist <= MAX_DIST && dist < last_distance {
-          last_distance = dist;
-          target = Some(player);
-        }
-      }
-    }
-
-    if let Some(target) = target {
-      let angle = (target.pos.y - self.entity.pos.y).atan2(target.pos.x - self.entity.pos.x);
-
-      let diff = angle - self.entity.angle;
-      let angle_diff = diff.sin().atan2(diff.cos());
-
-      self.entity.vel_to_angle();
-      if angle_diff.abs() >= ANGLE_INCREMENT {
-        if angle_diff < 0.0 {
-          self.entity.angle -= ANGLE_INCREMENT * (props.delta / 30.0);
-        } else {
-          self.entity.angle += ANGLE_INCREMENT * (props.delta / 30.0);
-        }
-        self.entity.angle_to_vel();
-      }
-    }
-
     self.entity.update(props);
-    HomingBullet::collide(&mut self.entity);
+    CorrosiveBullet::collide(&mut self.entity);
   }
 
   fn interact(&mut self, player: &mut HeroWrapper) {
-    self.entity.interact(player);
+    let player = player.player_mut();
+    if !self.entity.harmless
+      && player.pos.x > -player.radius
+      && player.pos.x - player.radius < self.entity.boundary.w
+    {
+      if distance(
+        player.pos.x - self.entity.pos.x,
+        player.pos.y - self.entity.pos.y,
+      ) <= self.entity.radius + player.radius
+      {
+        player.knock();
+      }
+    }
   }
 
   fn get_changes(&self) -> u8 {

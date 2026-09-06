@@ -1,4 +1,5 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::IMMUNE_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
@@ -11,7 +12,7 @@ pub struct Immune {
 impl Immune {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = 1;
+    entity.type_id = IMMUNE_ID;
     entity.immune = true;
     Self { entity }
   }

@@ -1,4 +1,5 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::STORM_CLOUD_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
@@ -13,7 +14,7 @@ pub struct StormCloud {
 impl StormCloud {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = 27;
+    entity.type_id = STORM_CLOUD_ID;
     entity.alpha = 0.8;
     Self {
       entity,

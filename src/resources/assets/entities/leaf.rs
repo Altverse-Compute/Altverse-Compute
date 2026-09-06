@@ -1,5 +1,6 @@
 use crate::bus::PlayerEvent;
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::LEAF_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance, random};
@@ -17,7 +18,7 @@ pub struct Leaf {
 impl Leaf {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = 8;
+    entity.type_id = LEAF_ID;
     entity.vel.x = 0.0;
     entity.vel.y = 0.0;
     entity.harmless = true;

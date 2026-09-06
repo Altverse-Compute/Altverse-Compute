@@ -3,6 +3,7 @@ use crate::config::Config;
 use crate::fbs::Package;
 use crate::managers::player::PlayersManager;
 use crate::props::EngineProps;
+use crate::resources::area::Area;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
 use crate::resources::world::World;
@@ -204,40 +205,12 @@ impl WorldsManager {
   ) {
     let warps = self.prepare_warps(&players_manager.players);
     for (id, change) in &warps {
+      let packed_players = players_manager.pack_players();
       if let Some(hero) = players_manager.players.get_mut(&id) {
         let player = hero.player_mut();
         match change {
-          Change::NextArea => {
-            if let Some(world) = self.worlds.get_mut(&player.world) {
-              if let Some(area) = world.areas.get_mut(player.area as usize) {
-                area.leave(player.id);
-              }
-              player.area += 1;
-              player.pos.x = -8.0 * 32.0 + player.radius;
-              let next_area = world.areas.get_mut(player.area as usize).unwrap();
-              next_area.join(player.id);
-              let area_init_package = Package::AreaInit(world.pack_area(player.area as usize));
-              network_bus.add_direct_package(*id, area_init_package);
-              let players_package = Package::Players(players_manager.pack_players());
-              network_bus.add_direct_package(*id, players_package);
-            }
-          }
-          Change::PrevArea => {
-            if let Some(world) = self.worlds.get_mut(&player.world) {
-              if let Some(area) = world.areas.get_mut(player.area as usize) {
-                area.leave(player.id);
-              }
-              player.area -= 1;
-              let prev_area = world.areas.get_mut(player.area as usize).unwrap();
-              prev_area.join(player.id);
-
-              player.pos.x = prev_area.raw_area.w + 8.0 * 32.0 - player.radius;
-              let area_init_package = Package::AreaInit(world.pack_area(player.area as usize));
-              network_bus.add_direct_package(*id, area_init_package);
-              let players_package = Package::Players(players_manager.pack_players());
-              network_bus.add_direct_package(*id, players_package);
-            }
-          }
+          Change::NextArea => self.warp_area(id, player, packed_players, network_bus, 1),
+          Change::PrevArea => self.warp_area(id, player, packed_players, network_bus, -1),
           Change::NextWorld => {
             if let Some(prev_world) = self.worlds.get_mut(&player.world) {
               prev_world.leave(&player);
@@ -272,6 +245,34 @@ impl WorldsManager {
     }
   }
 
+  fn warp_area(
+    self: &mut Self,
+    id: &u64,
+    player: &mut Player,
+    packed_players: Vec<u64>,
+    network_bus: &mut NetworkBus,
+    offset: i64,
+  ) {
+    if let Some(world) = self.worlds.get_mut(&player.world) {
+      if let Some(area) = world.areas.get_mut(player.area as usize) {
+        area.leave(player.id);
+      }
+      player.area = (player.area as i64 + offset) as u64;
+      let prev_area = world.areas.get_mut(player.area as usize).unwrap();
+      prev_area.join(player.id);
+
+      if offset < 0 {
+        player.pos.x = prev_area.raw_area.w + 8.0 * 32.0 - player.radius;
+      } else {
+        player.pos.x = -8.0 * 32.0 + player.radius;
+      }
+      let area_init_package = Package::AreaInit(world.pack_area(player.area as usize));
+      network_bus.add_direct_package(*id, area_init_package);
+      let players_package = Package::Players(packed_players);
+      network_bus.add_direct_package(*id, players_package);
+    }
+  }
+
   fn get_next_world(world_names: &Vec<String>, current_world: &String) -> String {
     let current_index = world_names.iter().position(|name| name == current_world);
 
@@ -288,6 +289,32 @@ impl WorldsManager {
       Some(idx) if idx > 0 => world_names[idx - 1].clone(),
       _ => world_names.get(world_names.len() - 1).unwrap().clone(),
     }
+  }
+
+  pub fn external_warp_next_area(
+    self: &mut Self,
+    id: &u64,
+    player: &mut Player,
+    packed_players: Vec<u64>,
+    network_bus: &mut NetworkBus,
+    area: i64,
+  ) -> bool {
+    if area < 0 && player.area as i64 + area < 1 {
+      return false;
+    }
+    if let Some(world) = self.worlds.get(&player.world) {
+      if let Some(_) = world.areas.get(player.area as usize + area as usize) {
+        self.warp_area(
+          id,
+          player,
+          packed_players,
+          network_bus,
+          area - player.area as i64,
+        );
+        return true;
+      }
+    }
+    false
   }
 
   pub fn get_next_area(&self, player: &Player) -> bool {

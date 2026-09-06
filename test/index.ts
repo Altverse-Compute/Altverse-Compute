@@ -5,7 +5,6 @@ import fs from 'fs'
 const worldsDir = fs.readdirSync('./test/worlds')
 let worlds = []
 for (const world in worldsDir) {
-  console.log(worldsDir[world])
   try {
     worlds.push(fs.readFileSync('./test/worlds/' + worldsDir[world]) + '')
   } catch {}
@@ -27,7 +26,6 @@ interface Client {
 }
 
 engine.onPlayerDeath((id) => {
-  console.log(id)
   if (clients.get(id)) {
     clients.get(id)?.close()
   }
@@ -61,7 +59,6 @@ App()
       for (const i of keys) {
         switch (i) {
           case 'message':
-            console.log(data.message)
             engine.chatMessage(data.message, client.id)
             break
           case 'keyUp':
@@ -116,7 +113,6 @@ App()
             // mouseEnable(ws, data.mouseEnable!)
             break
           case 'ability':
-            console.log(data.ability)
             if (data.ability === 'first') input.setFirstAbility(true)
             if (data.ability === 'second') input.setSecondAbility(true)
             break
@@ -152,9 +148,7 @@ const tick = () => {
     engine.input(Number(index), clientsInput[index])
     clientsInput[index].setFirstAbility(false)
   }
-  // console.time('Compute Engine')
   const packages = engine.update() as Record<string, Buffer>
-  // console.timeEnd('Compute Engine')/**/
 
   for (const [id, client] of clients) {
     let pkg = packages[id]

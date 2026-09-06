@@ -1,10 +1,11 @@
-use crate::resources::assets::entities::flame::FlameTrail;
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::flame::FlameTrail;
+use crate::resources::assets::entities::ids::FLAME_SNIPER_ID;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::player::Player;
-use crate::resources::{distance, random, AdditionalEntityProps, EntityProps, EntityUpdateProps};
+use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance, random};
 
 #[derive(Clone)]
 pub struct FlameSniper {
@@ -14,7 +15,7 @@ pub struct FlameSniper {
 impl FlameSniper {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props.clone());
-    entity.type_id = 20;
+    entity.type_id = FLAME_SNIPER_ID;
     Self {
       entity,
       timer: random(3000.0, 6000.0),

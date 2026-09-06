@@ -1,4 +1,5 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::{BULLET_ID, SNIPER_ID};
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
@@ -14,7 +15,7 @@ pub struct Sniper {
 impl Sniper {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = 3;
+    entity.type_id = SNIPER_ID;
     Self {
       entity,
       timer: random(0.0, 3000.0),
@@ -105,7 +106,7 @@ pub struct Bullet {
 impl Bullet {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props.clone());
-    entity.type_id = 4;
+    entity.type_id = BULLET_ID;
     Self { entity }
   }
   fn collide(entity: &mut Entity) {

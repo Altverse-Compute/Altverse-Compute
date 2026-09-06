@@ -1,6 +1,9 @@
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::bee::Bee;
 use crate::resources::assets::entities::cloud::Cloud;
+use crate::resources::assets::entities::corrosive::Corrosive;
+use crate::resources::assets::entities::corrosivesniper::{CorrosiveBullet, CorrosiveSniper};
+use crate::resources::assets::entities::dasher::Dasher;
 use crate::resources::assets::entities::draining::Draining;
 use crate::resources::assets::entities::drop::Drop;
 use crate::resources::assets::entities::fade::Fade;
@@ -47,6 +50,10 @@ macro_rules! entity_dispatch {
       EntityWrapper::Leaf(v) => v.$method($($arg),*),
       EntityWrapper::Cloud(v) => v.$method($($arg),*),
       EntityWrapper::StormCloud(v) => v.$method($($arg),*),
+      EntityWrapper::Corrosive(v) => v.$method($($arg),*),
+      EntityWrapper::CorrosiveSniper(v) => v.$method($($arg),*),
+      EntityWrapper::CorrosiveBullet(v) => v.$method($($arg),*),
+      EntityWrapper::Dasher(v) => v.$method($($arg),*),
     }
   };
 }
@@ -75,6 +82,10 @@ pub enum EntityWrapper {
   Leaf(Leaf),
   Cloud(Cloud),
   StormCloud(StormCloud),
+  Corrosive(Corrosive),
+  CorrosiveSniper(CorrosiveSniper),
+  CorrosiveBullet(CorrosiveBullet),
+  Dasher(Dasher),
 }
 
 impl EntityWrapper {
@@ -108,6 +119,11 @@ impl EntityWrapper {
       "storm_cloud" => Ok(EntityWrapper::StormCloud(StormCloud::new(
         *props, additional,
       ))),
+      "corrosive" => Ok(EntityWrapper::Corrosive(Corrosive::new(*props, additional))),
+      "corrosive_sniper" => Ok(EntityWrapper::CorrosiveSniper(CorrosiveSniper::new(
+        *props, additional,
+      ))),
+      "dasher" => Ok(EntityWrapper::Dasher(Dasher::new(*props, additional))),
       _ => Err(Error::new(
         Status::InvalidArg,
         "Unknown enemy type: ".to_string() + name,

@@ -1,7 +1,8 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::CLOUD_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
-use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdateProps};
+use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
 
 #[derive(Clone)]
 pub struct Cloud {
@@ -12,7 +13,7 @@ pub struct Cloud {
 impl Cloud {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = 21;
+    entity.type_id = CLOUD_ID;
     entity.alpha = 0.4;
     Self {
       entity,

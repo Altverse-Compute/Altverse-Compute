@@ -1,8 +1,9 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::BEE_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::player::Player;
-use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdateProps};
+use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
 use std::f64::consts::PI;
 
 const MAX_DIST: f32 = 5.625 * 32.0;
@@ -16,7 +17,7 @@ pub struct Bee {
 impl Bee {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = 15;
+    entity.type_id = BEE_ID;
     Self { entity }
   }
 }

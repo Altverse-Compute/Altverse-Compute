@@ -1,4 +1,5 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::DROP_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::utils::vector::Vector;
@@ -16,7 +17,7 @@ pub struct Drop {
 impl Drop {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props.clone());
-    entity.type_id = 7;
+    entity.type_id = DROP_ID;
     entity.vel.x = 0.0;
     entity.vel.y = entity.speed;
     Self {

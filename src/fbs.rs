@@ -3,6 +3,7 @@ pub enum Role {
   User = 0,
   Mod,
   Dev,
+  Server,
 }
 
 #[derive(Clone, Debug)]

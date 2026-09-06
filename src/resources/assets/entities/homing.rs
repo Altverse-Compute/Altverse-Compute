@@ -1,8 +1,9 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::HOMING_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::player::Player;
-use crate::resources::{distance, AdditionalEntityProps, EntityProps, EntityUpdateProps};
+use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
 
 const MAX_DIST: f32 = 5.625 * 32.0;
 const ANGLE_INCREMENT: f32 = 0.04;
@@ -15,7 +16,7 @@ pub struct Homing {
 impl Homing {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = 9;
+    entity.type_id = HOMING_ID;
     Self { entity }
   }
 }

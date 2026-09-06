@@ -184,6 +184,10 @@ impl BufferWriter {
     }
   }
 
+  pub fn clear(&mut self) {
+    self.data.clear();
+  }
+
   pub fn write_u8(&mut self, value: u8) {
     self.data.push(value);
   }
@@ -307,10 +311,6 @@ impl BufferWriter {
   pub fn is_empty(&self) -> bool {
     self.data.is_empty()
   }
-
-  pub fn clear(&mut self) {
-    self.data.clear();
-  }
 }
 
 pub struct Quantizer;
@@ -353,11 +353,17 @@ pub struct Chat {
 }
 impl Chat {
   pub fn write_package(value: &Chat, writer: &mut BufferWriter) {
-    writer.write_var_u32(1);
     writer.write_var_u32(value.id as u32);
     writer.write_string(value.content.clone());
     writer.write_string(value.author.clone());
     writer.write_string(value.world.clone());
+  }
+
+  pub fn to_vec(object: &Chat) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(1);
+    Chat::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[derive(Debug, Clone)]
@@ -380,7 +386,6 @@ pub struct PackedPlayer {
 }
 impl PackedPlayer {
   pub fn write_package(value: &PackedPlayer, writer: &mut BufferWriter) {
-    writer.write_var_u32(2);
     writer.write_var_u32(value.id as u32);
     writer.write_string(value.name.clone());
     writer.write_f32(value.x);
@@ -396,6 +401,13 @@ impl PackedPlayer {
     writer.write_string(value.world.clone());
     writer.write_bool(value.downed);
     writer.write_u32(value.hero);
+  }
+
+  pub fn to_vec(object: &PackedPlayer) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(2);
+    PackedPlayer::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[repr(u32)]
@@ -433,7 +445,6 @@ pub struct PartialPlayer {
 }
 impl PartialPlayer {
   pub fn write_package(value: &PartialPlayer, writer: &mut BufferWriter) {
-    writer.write_var_u32(3);
     let mut bitmask: u32 = 0;
     if value.name.is_some() {
       bitmask |= 1 << PartialPlayerBitmask::name as u32;
@@ -480,25 +491,25 @@ impl PartialPlayer {
       writer.write_string(name.clone());
     }
     if let Some(x) = &value.x {
-      writer.write_i16(Quantizer::from_f32_to_q16(*x, 0.5));
+      writer.write_var_i32(Quantizer::from_f32_to_q16(*x, 0.5) as i32);
     }
     if let Some(y) = &value.y {
-      writer.write_i16(Quantizer::from_f32_to_q16(*y, 0.5));
+      writer.write_var_i32(Quantizer::from_f32_to_q16(*y, 0.5) as i32);
     }
     if let Some(radius) = &value.radius {
-      writer.write_i16(Quantizer::from_f32_to_q16(*radius, 0.5));
+      writer.write_var_u32(Quantizer::from_f32_to_uq16(*radius, 0.5) as u32);
     }
     if let Some(speed) = &value.speed {
-      writer.write_i16(Quantizer::from_f32_to_q16(*speed, 0.5));
+      writer.write_var_u32(Quantizer::from_f32_to_uq16(*speed, 0.5) as u32);
     }
     if let Some(energy) = &value.energy {
-      writer.write_i16(Quantizer::from_f32_to_q16(*energy, 0.5));
+      writer.write_var_u32(Quantizer::from_f32_to_uq16(*energy, 0.5) as u32);
     }
     if let Some(max_energy) = &value.max_energy {
-      writer.write_i16(Quantizer::from_f32_to_q16(*max_energy, 0.5));
+      writer.write_var_u32(Quantizer::from_f32_to_uq16(*max_energy, 0.5) as u32);
     }
     if let Some(death_timer) = &value.death_timer {
-      writer.write_i8(Quantizer::from_f32_to_q8(*death_timer, 0.6));
+      writer.write_i8(Quantizer::from_f32_to_q8(*death_timer, 0.6) as i8);
     }
     if let Some(state) = &value.state {
       writer.write_u8(*state);
@@ -516,6 +527,13 @@ impl PartialPlayer {
       writer.write_bool(*downed);
     }
   }
+
+  pub fn to_vec(object: &PartialPlayer) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(3);
+    PartialPlayer::write_package(object, &mut writer);
+    writer.to_vec()
+  }
 }
 #[derive(Debug, Clone)]
 pub struct PackedEntity {
@@ -531,7 +549,6 @@ pub struct PackedEntity {
 }
 impl PackedEntity {
   pub fn write_package(value: &PackedEntity, writer: &mut BufferWriter) {
-    writer.write_var_u32(4);
     writer.write_var_u32(value.id as u32);
     writer.write_var_u32(value.type_id);
     writer.write_f32(value.x);
@@ -541,6 +558,13 @@ impl PackedEntity {
     writer.write_u8(value.state);
     writer.write_f32(value.state_meta);
     writer.write_f32(value.alpha);
+  }
+
+  pub fn to_vec(object: &PackedEntity) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(4);
+    PackedEntity::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[repr(u32)]
@@ -566,7 +590,6 @@ pub struct PartialEntity {
 }
 impl PartialEntity {
   pub fn write_package(value: &PartialEntity, writer: &mut BufferWriter) {
-    writer.write_var_u32(5);
     let mut bitmask: u32 = 0;
     if value.x.is_some() {
       bitmask |= 1 << PartialEntityBitmask::x as u32;
@@ -592,13 +615,13 @@ impl PartialEntity {
     writer.write_var_u32(bitmask);
     writer.write_var_u32(value.id as u32);
     if let Some(x) = &value.x {
-      writer.write_i16(Quantizer::from_f32_to_q16(*x, 0.5));
+      writer.write_var_u32(Quantizer::from_f32_to_uq16(*x, 0.5) as u32);
     }
     if let Some(y) = &value.y {
-      writer.write_i16(Quantizer::from_f32_to_q16(*y, 0.5));
+      writer.write_var_u32(Quantizer::from_f32_to_uq16(*y, 0.5) as u32);
     }
     if let Some(radius) = &value.radius {
-      writer.write_i16(Quantizer::from_f32_to_q16(*radius, 0.5));
+      writer.write_var_u32(Quantizer::from_f32_to_uq16(*radius, 0.5) as u32);
     }
     if let Some(harmless) = &value.harmless {
       writer.write_bool(*harmless);
@@ -607,11 +630,18 @@ impl PartialEntity {
       writer.write_u8(*state);
     }
     if let Some(state_meta) = &value.state_meta {
-      writer.write_i16(Quantizer::from_f32_to_q16(*state_meta, 0.5));
+      writer.write_var_u32(Quantizer::from_f32_to_uq16(*state_meta, 0.5) as u32);
     }
     if let Some(alpha) = &value.alpha {
-      writer.write_i8(Quantizer::from_f32_to_q8(*alpha, 0.39));
+      writer.write_i8(Quantizer::from_f32_to_q8(*alpha, 0.003) as i8);
     }
+  }
+
+  pub fn to_vec(object: &PartialEntity) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(5);
+    PartialEntity::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[derive(Debug, Clone)]
@@ -624,15 +654,21 @@ pub struct PackedArea {
 }
 impl PackedArea {
   pub fn write_package(value: &PackedArea, writer: &mut BufferWriter) {
-    writer.write_var_u32(6);
-    writer.write_i16(Quantizer::from_f32_to_q16(value.w, 0.5));
-    writer.write_i16(Quantizer::from_f32_to_q16(value.h, 0.5));
+    writer.write_u16(Quantizer::from_f32_to_uq16(value.w, 0.5) as u16);
+    writer.write_u16(Quantizer::from_f32_to_uq16(value.h, 0.5) as u16);
     writer.write_u32(value.area);
     writer.write_string(value.world.clone());
     writer.write_var_u32(value.entities.len() as u32);
     for i in &value.entities {
       PackedEntity::write_package(i, writer);
     }
+  }
+
+  pub fn to_vec(object: &PackedArea) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(6);
+    PackedArea::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[derive(Debug, Clone)]
@@ -641,11 +677,17 @@ pub struct Players {
 }
 impl Players {
   pub fn write_package(value: &Players, writer: &mut BufferWriter) {
-    writer.write_var_u32(7);
     writer.write_var_u32(value.players.len() as u32);
     for i in &value.players {
       PackedPlayer::write_package(i, writer);
     }
+  }
+
+  pub fn to_vec(object: &Players) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(7);
+    Players::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[derive(Debug, Clone)]
@@ -654,11 +696,17 @@ pub struct Entities {
 }
 impl Entities {
   pub fn write_package(value: &Entities, writer: &mut BufferWriter) {
-    writer.write_var_u32(8);
     writer.write_var_u32(value.entities.len() as u32);
     for i in &value.entities {
       PackedEntity::write_package(i, writer);
     }
+  }
+
+  pub fn to_vec(object: &Entities) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(8);
+    Entities::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[derive(Debug, Clone)]
@@ -667,8 +715,14 @@ pub struct ClosePlayer {
 }
 impl ClosePlayer {
   pub fn write_package(value: &ClosePlayer, writer: &mut BufferWriter) {
-    writer.write_var_u32(9);
     writer.write_var_u32(value.id);
+  }
+
+  pub fn to_vec(object: &ClosePlayer) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(9);
+    ClosePlayer::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[derive(Debug, Clone)]
@@ -677,11 +731,17 @@ pub struct CloseEntities {
 }
 impl CloseEntities {
   pub fn write_package(value: &CloseEntities, writer: &mut BufferWriter) {
-    writer.write_var_u32(10);
     writer.write_var_u32(value.ids.len() as u32);
     for i in &value.ids {
       writer.write_var_u32(*i);
     }
+  }
+
+  pub fn to_vec(object: &CloseEntities) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(10);
+    CloseEntities::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[derive(Debug, Clone)]
@@ -690,11 +750,17 @@ pub struct UpdateEntities {
 }
 impl UpdateEntities {
   pub fn write_package(value: &UpdateEntities, writer: &mut BufferWriter) {
-    writer.write_var_u32(11);
     writer.write_var_u32(value.items.len() as u32);
     for i in &value.items {
       PartialEntity::write_package(i, writer);
     }
+  }
+
+  pub fn to_vec(object: &UpdateEntities) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(11);
+    UpdateEntities::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[derive(Debug, Clone)]
@@ -703,11 +769,17 @@ pub struct UpdatePlayers {
 }
 impl UpdatePlayers {
   pub fn write_package(value: &UpdatePlayers, writer: &mut BufferWriter) {
-    writer.write_var_u32(12);
     writer.write_var_u32(value.items.len() as u32);
     for i in &value.items {
       PartialPlayer::write_package(i, writer);
     }
+  }
+
+  pub fn to_vec(object: &UpdatePlayers) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(12);
+    UpdatePlayers::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }
 #[repr(u32)]
@@ -738,7 +810,6 @@ pub struct Package {
 }
 impl Package {
   pub fn write_package(value: &Package, writer: &mut BufferWriter) {
-    writer.write_var_u32(13);
     let mut bitmask: u32 = 0;
     if value.new_player.is_some() {
       bitmask |= 1 << PackageBitmask::new_player as u32;
@@ -802,6 +873,13 @@ impl Package {
       Chat::write_package(chat, writer);
     }
   }
+
+  pub fn to_vec(object: &Package) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(13);
+    Package::write_package(object, &mut writer);
+    writer.to_vec()
+  }
 }
 #[derive(Debug, Clone)]
 pub struct Packages {
@@ -809,10 +887,16 @@ pub struct Packages {
 }
 impl Packages {
   pub fn write_package(value: &Packages, writer: &mut BufferWriter) {
-    writer.write_var_u32(14);
     writer.write_var_u32(value.items.len() as u32);
     for i in &value.items {
       Package::write_package(i, writer);
     }
+  }
+
+  pub fn to_vec(object: &Packages) -> Vec<u8> {
+    let mut writer = BufferWriter::new(16000usize);
+    writer.write_var_u32(14);
+    Packages::write_package(object, &mut writer);
+    writer.to_vec()
   }
 }

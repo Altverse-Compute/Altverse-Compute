@@ -192,6 +192,10 @@ impl PlayersManager {
     self.players.get(&id)
   }
 
+  pub fn get_mut_player(&mut self, id: u64) -> Option<&mut HeroWrapper> {
+    self.players.get_mut(&id)
+  }
+
   pub(crate) fn pack_players(&self) -> Vec<u64> {
     let mut result = Vec::new();
 

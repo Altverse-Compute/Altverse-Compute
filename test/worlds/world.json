@@ -9,7 +9,7 @@
     {
       "enemies": [
         {
-          "types": ["fade", "cloud"],
+          "types": ["dasher", "corrosive"],
           "radius": 45,
           "speed": 5,
           "count": 20

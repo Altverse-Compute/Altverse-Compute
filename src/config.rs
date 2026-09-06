@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
   pub spawn: Spawn,
   pub worlds: Vec<String>,
+  pub dev_mode: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -44,6 +45,7 @@ impl Config {
         died_timer: 60.0,
       },
       worlds: Vec::new(),
+      dev_mode: false,
     }
   }
 }

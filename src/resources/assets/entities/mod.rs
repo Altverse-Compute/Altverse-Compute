@@ -4,6 +4,9 @@ use crate::resources::entity::{Entity, EntityField};
 
 pub mod bee;
 pub mod cloud;
+pub mod corrosive;
+pub mod corrosivesniper;
+pub mod dasher;
 pub mod draining;
 pub mod drop;
 pub mod fade;
@@ -12,6 +15,7 @@ pub mod flamesniper;
 pub mod homing;
 pub mod homingsniper;
 pub mod icicle;
+mod ids;
 pub mod immune;
 pub mod leaf;
 pub mod normal;

@@ -1,5 +1,6 @@
 use crate::bus::PlayerEvent;
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::SLOW_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
@@ -12,8 +13,8 @@ pub struct Slow {
 
 impl Slow {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
-    let mut entity = Entity::new(props);
-    entity.type_id = 11;
+    let mut entity: Entity = Entity::new(props);
+    entity.type_id = SLOW_ID;
     entity.state = 1;
     entity.state_metadata = 150.0;
     entity.aura = 150.0;

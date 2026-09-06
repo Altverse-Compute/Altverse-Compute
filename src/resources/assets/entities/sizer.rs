@@ -1,4 +1,5 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::SIZER_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
@@ -15,7 +16,7 @@ impl Sizer {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
     let radius = entity.radius;
-    entity.type_id = 24;
+    entity.type_id = SIZER_ID;
     Self {
       entity,
       min_radius: radius * 2.5,
@@ -27,8 +28,6 @@ impl Sizer {
 
 impl EntityLogic for Sizer {
   fn update(&mut self, props: &mut EntityUpdateProps) {
-    self.entity.update(props);
-    self.entity.collide();
     if self.growing {
       self.entity.radius += (props.time_fix * 0.08) * self.min_radius;
       self.entity.changed_radius();
@@ -42,6 +41,8 @@ impl EntityLogic for Sizer {
         self.growing = true;
       }
     }
+    self.entity.update(props);
+    self.entity.collide();
   }
 
   fn interact(&mut self, player: &mut HeroWrapper) {

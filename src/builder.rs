@@ -396,5 +396,6 @@ pub fn build_packages<'a>(
     }
   }
 
+  builder.write_var_u32(14);
   Packages::write_package(&Packages { items: packages }, builder);
 }

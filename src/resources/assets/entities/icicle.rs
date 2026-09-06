@@ -1,4 +1,5 @@
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::ids::ICICLE_ID;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::{Entity, EntityField};
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, random};
@@ -13,7 +14,7 @@ pub struct Icicle {
 impl Icicle {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
     let mut entity = Entity::new(props);
-    entity.type_id = 25;
+    entity.type_id = ICICLE_ID;
     entity.vel.x = 0.0;
     entity.vel.y = ((random(0.0, 1.0) * 2.0).floor() * 2.0 - 1.0) * entity.speed;
     entity.collide();
