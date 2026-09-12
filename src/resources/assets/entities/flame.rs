@@ -2,7 +2,7 @@ use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::ids::FLAME_ID;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::{Entity, EntityField};
+use crate::resources::entity::Entity;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
 
 #[derive(Clone)]
@@ -29,7 +29,7 @@ impl EntityLogic for Flame {
       let mut trail = FlameTrail::new(
         EntityProps {
           id: 1,
-          type_id: 19,
+          type_id: FLAME_ID,
           radius: self.entity.radius,
           speed: 0.0,
           boundary: self.entity.boundary,

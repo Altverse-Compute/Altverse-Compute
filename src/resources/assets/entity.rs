@@ -21,7 +21,7 @@ use crate::resources::assets::entities::sniper::{Bullet, Sniper};
 use crate::resources::assets::entities::stormcloud::StormCloud;
 use crate::resources::assets::entities::wall::Wall;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::{Entity, EntityField};
+use crate::resources::entity::Entity;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps};
 use napi::{Error, Status};
 

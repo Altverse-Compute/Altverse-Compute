@@ -11,8 +11,10 @@ pub struct Config {
 pub struct Spawn {
   pub radius: f32,
   pub speed: f32,
+  pub spawn_max_speed: f32,
   pub max_speed: f32,
   pub regeneration: f32,
+  pub max_regeneration: f32,
   pub energy: f32,
   pub max_energy: f32,
   pub world: String,
@@ -31,10 +33,12 @@ impl Config {
     Self {
       spawn: Spawn {
         radius: 15.0,
-        speed: 17.0,
+        speed: 5.0,
+        spawn_max_speed: 5.0,
         max_speed: 17.0,
-        regeneration: 7.0,
-        energy: 30.0,
+        regeneration: 1.0,
+        max_regeneration: 7.0,
+        energy: 0.0,
         max_energy: 30.0,
         world: "".to_string(),
         area: 0,

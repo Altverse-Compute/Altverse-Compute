@@ -33,7 +33,7 @@ impl PlayersManager {
     worlds: &mut HashMap<String, World>,
     network_bus: &mut NetworkBus,
   ) -> Result<(), Error> {
-    let hero = HeroWrapper::new("maven", player_props.clone())?;
+    let hero = HeroWrapper::new("magmax", player_props.clone())?;
     let player = hero.player().clone();
     let player_id = hero.player().id;
     let world_name = hero.player().world.clone();

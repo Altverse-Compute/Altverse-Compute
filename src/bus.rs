@@ -5,7 +5,6 @@ use crate::resources::assets::effect::PlayerEffectWrapper;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::vector::Vector;
-use flatbuffers::FlatBufferBuilder;
 use std::collections::HashMap;
 
 pub struct Client {

@@ -1,4 +1,5 @@
 use crate::resources::assets::heroes::Hero;
+use crate::resources::assets::heroes::magmax::Magmax;
 use crate::resources::assets::heroes::maven::Maven;
 use crate::resources::player::{Player, PlayerField};
 use crate::resources::utils::input::Input;
@@ -10,6 +11,7 @@ macro_rules! hero_dispatch {
   ($self:expr, $method:ident($($arg:expr),*)) => {
     match $self {
       HeroWrapper::Maven(v) => v.$method($($arg),*),
+      HeroWrapper::Magmax(v) => v.$method($($arg),*),
     }
   };
 }
@@ -17,12 +19,14 @@ macro_rules! hero_dispatch {
 #[derive(Clone)]
 pub enum HeroWrapper {
   Maven(Maven),
+  Magmax(Magmax),
 }
 
 impl HeroWrapper {
   pub fn new(name: &str, props: JoinProps) -> Result<Self, Error> {
     match name {
       "maven" => Ok(HeroWrapper::Maven(Maven::new(props))),
+      "magmax" => Ok(HeroWrapper::Magmax(Magmax::new(props))),
       _ => Err(Error::new(
         Status::InvalidArg,
         "Unknown hero type: ".to_string() + name,

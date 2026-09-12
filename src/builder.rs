@@ -1,5 +1,6 @@
 use crate::bus::Client;
 use crate::fbs::Package::{self as OwnPackage};
+use crate::fbs::Role;
 use crate::managers::player::PlayersManager;
 use crate::managers::world::WorldsManager;
 use crate::pulse_gen::{
@@ -373,11 +374,18 @@ pub fn build_packages<'a>(
         });
       }
       OwnPackage::Chat(message) => {
+        let role: i32 = match message.role {
+          Role::Mod => 1,
+          Role::Dev => 2,
+          Role::Server => 3,
+          _ => 0,
+        };
         let chat = Chat {
           id: message.id,
           content: message.content,
           author: message.author,
           world: message.world,
+          role,
         };
 
         packages.push(Package {

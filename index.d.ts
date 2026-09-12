@@ -25,6 +25,11 @@ export declare class Input {
   mousePosY: number
   firstAbility: boolean
   secondAbility: boolean
+  speedUpgrade: boolean
+  energyUpgrade: boolean
+  regenerationUpgrade: boolean
+  firstAbilityUpgrade: boolean
+  secondAbilityUpgrade: boolean
   constructor()
   setLeft(val: boolean): void
   setRight(val: boolean): void
@@ -36,10 +41,16 @@ export declare class Input {
   setMousePosY(val: number): void
   setFirstAbility(val: boolean): void
   setSecondAbility(val: boolean): void
+  setSpeedUpgrade(val: boolean): void
+  setEnergyUpgrade(val: boolean): void
+  setRegenerationUpgrade(val: boolean): void
+  setFirstAbilityUpgrade(val: boolean): void
+  setSecondAbilityUpgrade(val: boolean): void
 }
 
 export declare class JoinProps {
   name: string
   id: number
-  constructor(name: string, id: number)
+  role: number
+  constructor(name: string, id: number, role: number)
 }

@@ -13,6 +13,11 @@ pub struct Input {
   pub mouse_pos_y: f64,
   pub first_ability: bool,
   pub second_ability: bool,
+  pub speed_upgrade: bool,
+  pub energy_upgrade: bool,
+  pub regeneration_upgrade: bool,
+  pub first_ability_upgrade: bool,
+  pub second_ability_upgrade: bool,
 }
 
 #[napi]
@@ -30,6 +35,11 @@ impl Input {
       mouse_pos_y: 0.0,
       first_ability: false,
       second_ability: false,
+      speed_upgrade: false,
+      energy_upgrade: false,
+      regeneration_upgrade: false,
+      first_ability_upgrade: false,
+      second_ability_upgrade: false,
     }
   }
   #[napi]
@@ -80,5 +90,30 @@ impl Input {
   #[napi]
   pub fn set_second_ability(&mut self, val: bool) {
     self.second_ability = val;
+  }
+
+  #[napi]
+  pub fn set_speed_upgrade(&mut self, val: bool) {
+    self.speed_upgrade = val;
+  }
+
+  #[napi]
+  pub fn set_energy_upgrade(&mut self, val: bool) {
+    self.energy_upgrade = val;
+  }
+
+  #[napi]
+  pub fn set_regeneration_upgrade(&mut self, val: bool) {
+    self.regeneration_upgrade = val;
+  }
+
+  #[napi]
+  pub fn set_first_ability_upgrade(&mut self, val: bool) {
+    self.first_ability_upgrade = val;
+  }
+
+  #[napi]
+  pub fn set_second_ability_upgrade(&mut self, val: bool) {
+    self.second_ability_upgrade = val;
   }
 }

@@ -2,6 +2,7 @@ use crate::resources::player::{Player, PlayerField};
 use crate::resources::utils::input::Input;
 use crate::resources::{Boundary, PlayerUpdateProps};
 
+pub mod magmax;
 pub mod maven;
 
 pub trait Hero {

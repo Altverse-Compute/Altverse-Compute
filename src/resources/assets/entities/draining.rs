@@ -2,7 +2,7 @@ use crate::bus::PlayerEvent;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::ids::DRAINING_ID;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::{Entity, EntityField};
+use crate::resources::entity::Entity;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
 
 #[derive(Clone)]
@@ -61,7 +61,7 @@ impl EntityLogic for Draining {
           player.pos.y - self.entity.pos.y,
         ) <= self.entity.radius + player.radius
         {
-          player.knock();
+          hero.knock();
         }
       }
     }

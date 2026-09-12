@@ -3,7 +3,7 @@ use crate::resources::assets::entities::flame::FlameTrail;
 use crate::resources::assets::entities::ids::FLAME_SNIPER_ID;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::{Entity, EntityField};
+use crate::resources::entity::Entity;
 use crate::resources::player::Player;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance, random};
 

@@ -1,7 +1,7 @@
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::ids::DROP_ID;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::{Entity, EntityField};
+use crate::resources::entity::Entity;
 use crate::resources::utils::vector::Vector;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, random};
 

@@ -350,6 +350,7 @@ pub struct Chat {
   pub content: String,
   pub author: String,
   pub world: String,
+  pub role: i32,
 }
 impl Chat {
   pub fn write_package(value: &Chat, writer: &mut BufferWriter) {
@@ -357,6 +358,7 @@ impl Chat {
     writer.write_string(value.content.clone());
     writer.write_string(value.author.clone());
     writer.write_string(value.world.clone());
+    writer.write_i32(value.role);
   }
 
   pub fn to_vec(object: &Chat) -> Vec<u8> {
@@ -633,7 +635,7 @@ impl PartialEntity {
       writer.write_var_u32(Quantizer::from_f32_to_uq16(*state_meta, 0.5) as u32);
     }
     if let Some(alpha) = &value.alpha {
-      writer.write_i8(Quantizer::from_f32_to_q8(*alpha, 0.003) as i8);
+      writer.write_u8(Quantizer::from_f32_to_uq8(*alpha, 0.003) as u8);
     }
   }
 

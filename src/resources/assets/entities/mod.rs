@@ -1,6 +1,6 @@
 use crate::resources::EntityUpdateProps;
 use crate::resources::assets::hero::HeroWrapper;
-use crate::resources::entity::{Entity, EntityField};
+use crate::resources::entity::Entity;
 
 pub mod bee;
 pub mod cloud;

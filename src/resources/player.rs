@@ -1,4 +1,5 @@
 use crate::CONFIG;
+use crate::fbs::Role;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::utils::vector::Vector;
@@ -13,8 +14,9 @@ pub struct Player {
   pub(crate) radius: f32,
   pub vel: Vector,
   acc: Vector,
-  slide: Vector,
+  pub slide: Vector,
   pub speed: f32,
+  pub reserved_speed: f32,
   pub energy: f32,
   pub max_energy: f32,
   pub downed: bool,
@@ -23,6 +25,7 @@ pub struct Player {
   pub area: u64,
   #[track(skip)]
   angle: f32,
+  default_death_timer: f32,
   pub death_timer: f32,
 
   pub immortal: bool,
@@ -33,11 +36,17 @@ pub struct Player {
   pub hero: u32,
 
   pub changes: u32,
+
+  pub role: Role,
+  pub default_max_energy: f32,
+  pub max_speed: f32,
+  pub max_regeneration: f32,
 }
 
 impl Player {
   pub fn new(props: JoinProps) -> Self {
     let spawn = CONFIG.lock().unwrap().clone().spawn;
+    let role: Role = props.clone().role_to_internal();
     Player {
       name: props.name,
       id: props.id as u64,
@@ -47,11 +56,13 @@ impl Player {
       acc: Vector::new(None, None),
       slide: Vector::new(None, None),
       speed: spawn.speed,
+      reserved_speed: spawn.speed,
       energy: spawn.energy,
-      max_energy: spawn.max_energy,
+      max_energy: spawn.spawn_max_speed,
       downed: false,
       regeneration: spawn.regeneration,
       angle: 0.0,
+      default_death_timer: spawn.died_timer,
       death_timer: spawn.died_timer,
       immortal: false,
       state: 0,
@@ -61,6 +72,10 @@ impl Player {
       to_delete: false,
       hero: 0,
       changes: 0,
+      role,
+      default_max_energy: spawn.max_energy,
+      max_speed: spawn.max_speed,
+      max_regeneration: spawn.max_regeneration,
     }
   }
 
@@ -127,18 +142,6 @@ impl Player {
   pub fn input(&mut self, input: &mut Input) {
     let shift: f32 = if input.shift { 0.5 } else { 1.0 };
 
-    if input.left {
-      self.acc.x = -self.speed * shift;
-    }
-    if input.right {
-      self.acc.x = self.speed * shift;
-    }
-    if input.up {
-      self.acc.y = -self.speed * shift;
-    }
-    if input.down {
-      self.acc.y = self.speed * shift;
-    }
     if input.mouse_enable {
       let dist = distance(input.mouse_pos_x as f32, input.mouse_pos_y as f32);
       let mut speed_x = input.mouse_pos_x as f32;
@@ -161,11 +164,44 @@ impl Player {
       self.acc.x = dist_movement * self.angle.cos();
       self.acc.y = dist_movement * self.angle.sin();
     }
+
+    if input.left {
+      self.acc.x = -self.speed * shift;
+    }
+    if input.right {
+      self.acc.x = self.speed * shift;
+    }
+    if input.up {
+      self.acc.y = -self.speed * shift;
+    }
+    if input.down {
+      self.acc.y = self.speed * shift;
+    }
+
+    if input.speed_upgrade {
+      if self.speed < self.max_speed {
+        self.speed += 0.5f32;
+        self.reserved_speed += 0.5f32;
+        self.changed_speed();
+      }
+    }
+    if input.energy_upgrade {
+      if self.max_energy < self.default_max_energy {
+        self.max_energy += 5f32;
+        self.changed_max_energy();
+      }
+    }
+    if input.regeneration_upgrade {
+      if self.regeneration < self.max_regeneration {
+        self.regeneration += 0.25f32;
+        self.changed_regeneration();
+      }
+    }
   }
 
   pub fn knock(&mut self) {
     self.downed = true;
-    self.death_timer = 60.0;
+    self.death_timer = self.default_death_timer;
     self.changed_downed();
     self.changed_death_timer();
   }
