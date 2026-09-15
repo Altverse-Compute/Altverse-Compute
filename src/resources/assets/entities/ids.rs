@@ -22,3 +22,4 @@ pub const CORROSIVE_ID: u64 = 20;
 pub const CORROSIVE_SNIPER_ID: u64 = 21;
 pub const CORROSIVE_BULLET_ID: u64 = 22;
 pub const DASHER_ID: u64 = 23;
+pub const MAGNETIC_SOUL_ID: u64 = 24;

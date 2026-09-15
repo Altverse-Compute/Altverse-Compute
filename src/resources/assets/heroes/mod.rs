@@ -1,7 +1,8 @@
-use crate::resources::player::{Player, PlayerField};
+use crate::resources::player::Player;
 use crate::resources::utils::input::Input;
 use crate::resources::{Boundary, PlayerUpdateProps};
 
+pub mod ids;
 pub mod magmax;
 pub mod maven;
 

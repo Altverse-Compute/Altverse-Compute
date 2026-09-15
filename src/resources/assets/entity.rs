@@ -14,6 +14,7 @@ use crate::resources::assets::entities::homingsniper::{HomingBullet, HomingSnipe
 use crate::resources::assets::entities::icicle::Icicle;
 use crate::resources::assets::entities::immune::Immune;
 use crate::resources::assets::entities::leaf::Leaf;
+use crate::resources::assets::entities::magneticsoul::MagneticSoul;
 use crate::resources::assets::entities::normal::Normal;
 use crate::resources::assets::entities::sizer::Sizer;
 use crate::resources::assets::entities::slow::Slow;
@@ -54,6 +55,7 @@ macro_rules! entity_dispatch {
       EntityWrapper::CorrosiveSniper(v) => v.$method($($arg),*),
       EntityWrapper::CorrosiveBullet(v) => v.$method($($arg),*),
       EntityWrapper::Dasher(v) => v.$method($($arg),*),
+      EntityWrapper::MagneticSoul(v) => v.$method($($arg),*),
     }
   };
 }
@@ -86,6 +88,7 @@ pub enum EntityWrapper {
   CorrosiveSniper(CorrosiveSniper),
   CorrosiveBullet(CorrosiveBullet),
   Dasher(Dasher),
+  MagneticSoul(MagneticSoul),
 }
 
 impl EntityWrapper {

@@ -1,6 +1,6 @@
 use crate::bus::Client;
-use crate::fbs::Package::{self as OwnPackage};
-use crate::fbs::Role;
+use crate::external::Package::{self as OwnPackage};
+use crate::external::Role;
 use crate::managers::player::PlayersManager;
 use crate::managers::world::WorldsManager;
 use crate::pulse_gen::{

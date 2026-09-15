@@ -3,7 +3,7 @@ use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
 use crate::resources::{AdditionalEntityProps, Boundary, EntityProps, random};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub struct Area {
   pub entities: HashMap<u64, EntityWrapper>,
@@ -101,6 +101,7 @@ impl Area {
     let mut entity_clone = entity.clone();
     entity_clone.entity_mut().id = self.next_id;
     self.entities.insert(self.next_id, entity_clone);
+
     self.next_id
   }
 
@@ -114,6 +115,19 @@ impl Area {
     }
 
     arr
+  }
+
+  pub fn get_players_vec_mut<'a>(
+    &self,
+    players: &'a mut HashMap<u64, HeroWrapper>,
+  ) -> Vec<&'a mut Player> {
+    let id_set: HashSet<u64> = self.players_id.iter().copied().collect();
+
+    players
+      .iter_mut()
+      .filter(|(id, _)| id_set.contains(id))
+      .map(|(_, hero)| hero.player_mut())
+      .collect()
   }
 
   pub fn as_boundary(&self) -> Boundary {

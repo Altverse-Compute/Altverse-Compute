@@ -21,7 +21,7 @@ use std::sync::Mutex;
 mod builder;
 mod bus;
 mod config;
-mod fbs;
+mod external;
 mod managers;
 mod props;
 mod pulse_gen;

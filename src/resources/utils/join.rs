@@ -1,6 +1,6 @@
 use napi_derive::napi;
 
-use crate::fbs::Role;
+use crate::external::Role;
 
 #[napi]
 #[derive(Clone)]

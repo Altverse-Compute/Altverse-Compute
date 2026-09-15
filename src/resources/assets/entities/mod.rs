@@ -18,6 +18,7 @@ pub mod icicle;
 mod ids;
 pub mod immune;
 pub mod leaf;
+pub mod magneticsoul;
 pub mod normal;
 pub mod sizer;
 pub mod slow;

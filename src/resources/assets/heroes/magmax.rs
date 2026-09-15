@@ -1,4 +1,5 @@
 use crate::resources::assets::heroes::Hero;
+use crate::resources::assets::heroes::ids::MAGMAX_ID;
 use crate::resources::player::Player;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
@@ -13,8 +14,10 @@ pub struct Magmax {
 
 impl Magmax {
   pub fn new(props: JoinProps) -> Self {
+    let mut player = Player::new(props);
+    player.hero = MAGMAX_ID;
     Self {
-      player: Player::new(props),
+      player,
       harden: false,
       flow: false,
     }

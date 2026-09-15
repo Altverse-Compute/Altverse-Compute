@@ -1,7 +1,7 @@
 use crate::resources::assets::heroes::Hero;
 use crate::resources::assets::heroes::magmax::Magmax;
 use crate::resources::assets::heroes::maven::Maven;
-use crate::resources::player::{Player, PlayerField};
+use crate::resources::player::Player;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::{Boundary, PlayerUpdateProps};

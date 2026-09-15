@@ -23,7 +23,7 @@ impl Homing {
 
 impl EntityLogic for Homing {
   fn update(&mut self, props: &mut EntityUpdateProps) {
-    let mut target: Option<&&Player> = None;
+    let mut target: Option<&&mut Player> = None;
     let mut last_distance = MAX_DIST;
     for player in props.players.iter() {
       if player.pos.x > -player.radius

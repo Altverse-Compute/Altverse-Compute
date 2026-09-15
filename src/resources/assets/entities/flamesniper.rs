@@ -31,7 +31,7 @@ impl EntityLogic for FlameSniper {
     self.timer += props.delta;
 
     if self.timer > 6000.0 {
-      let mut target: Option<&&Player> = None;
+      let mut target: Option<&&mut Player> = None;
       let mut last_distance = 20.0 * 32.0;
       for player in props.players.iter() {
         if player.pos.x > -player.radius

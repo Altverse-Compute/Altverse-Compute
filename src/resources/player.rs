@@ -1,5 +1,5 @@
 use crate::CONFIG;
-use crate::fbs::Role;
+use crate::external::Role;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::utils::vector::Vector;
@@ -25,6 +25,7 @@ pub struct Player {
   pub area: u64,
   #[track(skip)]
   angle: f32,
+  #[track(skip)]
   default_death_timer: f32,
   pub death_timer: f32,
 

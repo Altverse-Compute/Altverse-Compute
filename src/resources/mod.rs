@@ -40,7 +40,7 @@ pub struct EntityProps {
 pub struct EntityUpdateProps<'a> {
   pub delta: f32,
   pub time_fix: f32,
-  pub players: Vec<&'a Player>,
+  pub players: Vec<&'a mut Player>,
   pub event_bus: &'a mut EventBus,
 }
 

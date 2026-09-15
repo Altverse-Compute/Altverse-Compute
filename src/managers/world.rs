@@ -1,9 +1,8 @@
 use crate::bus::{EventBus, NetworkBus};
 use crate::config::Config;
-use crate::fbs::Package;
+use crate::external::Package;
 use crate::managers::player::PlayersManager;
 use crate::props::EngineProps;
-use crate::resources::area::Area;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
 use crate::resources::world::World;
@@ -45,20 +44,11 @@ impl WorldsManager {
     network_bus: &mut NetworkBus,
     event_bus: &mut EventBus,
   ) {
-    let players_clone = &mut players_manager.players.clone();
     let players = &mut players_manager.players;
     for (name, world) in self.worlds.iter_mut() {
       for (index, area) in world.areas.iter_mut().enumerate() {
         self.old_entities = area.get_packed_entities();
-        event_bus.entities_to_spawn.clear();
         let boundary = area.as_boundary();
-
-        let mut entity_update = EntityUpdateProps {
-          delta: props.delta,
-          time_fix: props.time_fix,
-          players: area.get_players_vec(players_clone),
-          event_bus,
-        };
 
         for (_, effects) in players_manager.effects.iter_mut() {
           for (_, effect) in effects.iter_mut() {
@@ -87,6 +77,13 @@ impl WorldsManager {
             true
           }
         });
+
+        let mut entity_update = EntityUpdateProps {
+          delta: props.delta,
+          time_fix: props.time_fix,
+          players: area.get_players_vec_mut(players),
+          event_bus,
+        };
 
         for (id, entity) in area.entities.iter_mut() {
           entity.update(&mut entity_update);
@@ -131,6 +128,7 @@ impl WorldsManager {
           let id = area.add_entity(entity.clone());
           self.spawned_entities.push(id);
         }
+        event_bus.entities_to_spawn.clear();
 
         self.new_entities = area.get_packed_entities();
 

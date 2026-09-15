@@ -1,5 +1,5 @@
 use crate::bus::{EventBus, NetworkBus};
-use crate::fbs::Package;
+use crate::external::Package;
 use crate::resources::assets::effect::PlayerEffectWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::utils::join::JoinProps;
@@ -33,7 +33,7 @@ impl PlayersManager {
     worlds: &mut HashMap<String, World>,
     network_bus: &mut NetworkBus,
   ) -> Result<(), Error> {
-    let hero = HeroWrapper::new("magmax", player_props.clone())?;
+    let hero = HeroWrapper::new("maven", player_props.clone())?;
     let player = hero.player().clone();
     let player_id = hero.player().id;
     let world_name = hero.player().world.clone();
@@ -99,7 +99,7 @@ impl PlayersManager {
     update_props: &UpdateProps,
     worlds: &mut HashMap<String, World>,
     network_bus: &mut NetworkBus,
-    event_bus: &mut EventBus,
+    mut event_bus: &mut EventBus,
   ) {
     let players_clone = &self.players.clone();
 
@@ -122,7 +122,7 @@ impl PlayersManager {
             time_fix: update_props.time_fix,
             delta: update_props.delta,
             players: area.get_players_vec(&players_clone),
-            event_bus,
+            event_bus: &mut event_bus,
           };
           hero.update(&mut update_player_props);
           let boundary = area.as_boundary_player();

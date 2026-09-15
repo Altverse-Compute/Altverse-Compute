@@ -1,5 +1,5 @@
 use crate::config::RawWorld;
-use crate::fbs::PackedArea;
+use crate::external::PackedArea;
 use crate::resources::area::Area;
 use crate::resources::player::Player;
 

@@ -34,7 +34,7 @@ impl EntityLogic for HomingSniper {
     self.timer += props.delta;
 
     if self.timer > 3000.0 {
-      let mut target: Option<&&Player> = None;
+      let mut target: Option<&&mut Player> = None;
       let mut last_distance = 20.0 * 32.0;
       for player in props.players.iter() {
         if player.pos.x > -player.radius
@@ -132,7 +132,7 @@ impl HomingBullet {
 
 impl EntityLogic for HomingBullet {
   fn update(&mut self, props: &mut EntityUpdateProps) {
-    let mut target: Option<&&Player> = None;
+    let mut target: Option<&&mut Player> = None;
     let mut last_distance = MAX_DIST;
     for player in props.players.iter() {
       if player.pos.x > -player.radius

@@ -1,4 +1,4 @@
-use crate::fbs::Package;
+use crate::external::Package;
 use crate::managers::player::PlayersManager;
 use crate::pulse_gen::BufferWriter;
 use crate::resources::assets::effect::PlayerEffectWrapper;

@@ -1,8 +1,5 @@
 use crate::resources::assets::entities::EntityLogic;
-use crate::resources::assets::entities::corrosive::Corrosive;
-use crate::resources::assets::entities::ids::{
-  BULLET_ID, CORROSIVE_BULLET_ID, CORROSIVE_SNIPER_ID, SNIPER_ID,
-};
+use crate::resources::assets::entities::ids::{CORROSIVE_BULLET_ID, CORROSIVE_SNIPER_ID};
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::Entity;
@@ -34,7 +31,7 @@ impl EntityLogic for CorrosiveSniper {
     self.timer += props.delta;
 
     if self.timer > 3000.0 {
-      let mut target: Option<&&Player> = None;
+      let mut target: Option<&&mut Player> = None;
       let mut last_distance = 20.0 * 32.0;
       for player in props.players.iter() {
         if player.pos.x > -player.radius
