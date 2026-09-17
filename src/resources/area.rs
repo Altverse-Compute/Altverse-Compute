@@ -2,7 +2,7 @@ use crate::config::RawArea;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::player::Player;
-use crate::resources::{AdditionalEntityProps, Boundary, EntityProps, random};
+use crate::resources::{AdditionalAreaProps, AdditionalEntityProps, Boundary, EntityProps, random};
 use std::collections::{HashMap, HashSet};
 
 pub struct Area {
@@ -10,15 +10,19 @@ pub struct Area {
   pub players_id: Vec<u64>,
   pub raw_area: RawArea,
   pub next_id: u64,
+  pub index: u64,
+  pub world: String,
 }
 
 impl Area {
-  pub fn new(raw_area: RawArea) -> Self {
+  pub fn new(raw_area: RawArea, additional: AdditionalAreaProps) -> Self {
     Self {
       entities: HashMap::new(),
       players_id: Vec::new(),
       raw_area,
       next_id: 0,
+      world: additional.world,
+      index: additional.index,
     }
   }
 
@@ -72,6 +76,8 @@ impl Area {
               w: self.raw_area.w,
               h: self.raw_area.h,
             },
+            area: self.index,
+            world: self.world.clone(),
           };
           let type_name = entity
             .types

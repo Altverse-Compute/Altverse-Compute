@@ -1,4 +1,5 @@
 use crate::resources::assets::heroes::Hero;
+use crate::resources::assets::heroes::bubble::Bubble;
 use crate::resources::assets::heroes::magmax::Magmax;
 use crate::resources::assets::heroes::maven::Maven;
 use crate::resources::player::Player;
@@ -11,6 +12,7 @@ macro_rules! hero_dispatch {
   ($self:expr, $method:ident($($arg:expr),*)) => {
     match $self {
       HeroWrapper::Maven(v) => v.$method($($arg),*),
+      HeroWrapper::Bubble(v) => v.$method($($arg),*),
       HeroWrapper::Magmax(v) => v.$method($($arg),*),
     }
   };
@@ -19,6 +21,7 @@ macro_rules! hero_dispatch {
 #[derive(Clone)]
 pub enum HeroWrapper {
   Maven(Maven),
+  Bubble(Bubble),
   Magmax(Magmax),
 }
 
@@ -26,6 +29,7 @@ impl HeroWrapper {
   pub fn new(name: &str, props: JoinProps) -> Result<Self, Error> {
     match name {
       "maven" => Ok(HeroWrapper::Maven(Maven::new(props))),
+      "bubble" => Ok(HeroWrapper::Bubble(Bubble::new(props))),
       "magmax" => Ok(HeroWrapper::Magmax(Magmax::new(props))),
       _ => Err(Error::new(
         Status::InvalidArg,

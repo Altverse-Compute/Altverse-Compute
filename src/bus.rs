@@ -87,8 +87,14 @@ pub enum PlayerEvent {
   },
 }
 
+pub struct EntityToSpawnWrapper {
+  pub entity: EntityWrapper,
+  pub area: u64,
+  pub world: String,
+}
+
 pub struct EventBus {
-  pub entities_to_spawn: Vec<EntityWrapper>,
+  pub entities_to_spawn: Vec<EntityToSpawnWrapper>,
   pub players_events: Vec<PlayerEvent>,
 }
 
@@ -100,8 +106,12 @@ impl EventBus {
     }
   }
 
-  pub fn add_entity(&mut self, entity: EntityWrapper) {
-    self.entities_to_spawn.push(entity);
+  pub fn add_entity(&mut self, entity: EntityWrapper, area: u64, world: String) {
+    self.entities_to_spawn.push(EntityToSpawnWrapper {
+      entity,
+      area,
+      world,
+    });
   }
 
   pub fn respawn_player_and_move(&mut self, player_id: u64, pos: Vector) {

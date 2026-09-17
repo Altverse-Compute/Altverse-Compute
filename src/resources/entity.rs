@@ -28,9 +28,18 @@ pub struct Entity {
   #[track(skip)]
   pub boundary: Boundary,
 
+  #[track(skip)]
+  pub area: u64,
+
+  #[track(skip)]
+  pub world: String,
+
   pub state: u8,
   pub state_metadata: f32,
   pub alpha: f32,
+
+  #[track(skip)]
+  pub interactable_with_entities: bool,
 
   pub changes: u8,
 }
@@ -63,6 +72,11 @@ impl Entity {
       aura: 0.0,
 
       changes: 0,
+
+      interactable_with_entities: false,
+
+      area: props.area,
+      world: props.world,
     }
   }
 

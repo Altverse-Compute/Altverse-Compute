@@ -1,5 +1,6 @@
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::ids::ICICLE_ID;
+use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::Entity;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, random};
@@ -66,6 +67,7 @@ impl EntityLogic for Icicle {
         self.entity.angle_to_vel();
       }
     }
+
     self.entity.update(props);
 
     self.collide();
@@ -74,6 +76,8 @@ impl EntityLogic for Icicle {
   fn interact(&mut self, player: &mut HeroWrapper) {
     self.entity.interact(player);
   }
+
+  fn interact_with_entity(&mut self, _: &mut EntityWrapper) {}
 
   fn get_changes(&self) -> u8 {
     self.entity.get_changes()

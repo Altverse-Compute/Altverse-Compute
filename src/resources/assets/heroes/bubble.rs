@@ -1,96 +1,99 @@
+use std::f32::consts::PI;
+
 use crate::resources::assets::entities::EntityLogic;
+use crate::resources::assets::entities::bubblefoam::BubbleFoam;
 use crate::resources::assets::entities::magneticsoul::MagneticSoul;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::heroes::Hero;
-use crate::resources::assets::heroes::ids::MAVEN_ID;
+use crate::resources::assets::heroes::ids::{BUBBLE_ID, MAVEN_ID};
 use crate::resources::player::Player;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
 use crate::resources::{AdditionalEntityProps, Boundary, EntityProps, PlayerUpdateProps, distance};
 
-const MAVEN_LIFEBUOY_RADIUS: f32 = 185f32;
-const MAVEN_MAGNETIC_SOUL_RADIUS: f32 = 120f32;
-
 #[derive(Clone)]
-pub struct Maven {
+pub struct Bubble {
   player: Player,
-  lifebuoy_active: bool,
-  lifebuoy_cooldown: f32,
-  magnetic_soul_active: bool,
-  magnetic_soul_cooldown: f32,
-  magnetic_soul_spawned: bool,
-  magnetic_soul_was_spawned_in_past: bool,
+  bubble_foam_active: bool,
+  bubble_foam_cooldown: f32,
 }
 
-impl Maven {
+const BUBBLE_FOAM_COUNT: usize = 5;
+const BUBBLE_FOAM_COOLDOWN: f32 = 10000f32;
+
+impl Bubble {
   pub fn new(props: JoinProps) -> Self {
     let mut player = Player::new(props);
-    player.hero = MAVEN_ID;
+    player.hero = BUBBLE_ID;
     Self {
       player,
-      lifebuoy_active: false,
-      lifebuoy_cooldown: 0f32,
-      magnetic_soul_active: false,
-      magnetic_soul_cooldown: 0f32,
-      magnetic_soul_spawned: false,
-      magnetic_soul_was_spawned_in_past: false,
+      bubble_foam_active: false,
+      bubble_foam_cooldown: 0f32,
     }
   }
 
-  fn activate_lifebuoy(&mut self) {
-    if self.lifebuoy_active {
-      self.deactivate_lifebuoy();
-    }
-    if self.player.energy > 30.0 && !self.player.downed && self.lifebuoy_cooldown <= 0.0 {
-      self.lifebuoy_active = !self.lifebuoy_active;
-      if self.lifebuoy_active {
-        self.player.energy -= 30.0;
-        self.player.changed_energy();
-        self.lifebuoy_cooldown = 2000.0;
-        self.player.state = 1;
-        self.player.state_meta = MAVEN_LIFEBUOY_RADIUS;
-        self.player.changed_state();
-        self.player.changed_state_meta();
-      }
-    }
-  }
+  fn create_bubble_foam_at(&mut self, x: f32, y: f32, boundary: Boundary) -> BubbleFoam {
+    let mut foam = BubbleFoam::new(
+      EntityProps {
+        id: 0,
+        type_id: 0,
+        radius: 20f32,
+        speed: 20f32,
+        boundary,
+        world: self.player.world.clone(),
+        area: self.player.area,
+      },
+      AdditionalEntityProps {
+        count: 0,
+        num: 1,
+        inverse: false,
+      },
+    );
+    let entity = foam.entity_mut();
+    entity.pos.x = self.player.pos.x + x * self.player.radius;
+    entity.pos.y = self.player.pos.y + y * self.player.radius;
+    entity.changed_pos();
+    entity.vel.x = x * entity.speed;
+    entity.vel.y = y * entity.speed;
 
-  fn activate_magnetic_soul(&mut self) {
-    if self.player.downed
-      && self.magnetic_soul_cooldown == 0.0
-      && !self.magnetic_soul_was_spawned_in_past
-    {
-      self.magnetic_soul_was_spawned_in_past = true;
-      self.magnetic_soul_active = true;
-      self.magnetic_soul_cooldown = 8000.0;
-      self.player.state = 2;
-      self.player.changed_state();
-      self.player.state_meta = MAVEN_MAGNETIC_SOUL_RADIUS;
-      self.player.changed_state_meta();
-    }
-  }
-
-  fn deactivate_lifebuoy(&mut self) {
-    self.lifebuoy_active = false;
-    self.player.state = 0;
-    self.player.changed_state();
-  }
-
-  fn deactivate_magnetic_soul(&mut self) {
-    self.magnetic_soul_active = false;
-    self.player.state = 0;
-    self.player.changed_state();
-    self.player.state_meta = 0.0;
-    self.player.changed_state_meta();
-    self.magnetic_soul_spawned = false;
+    foam
   }
 }
 
-impl Hero for Maven {
+impl Hero for Bubble {
   fn update(&mut self, props: &mut PlayerUpdateProps) {
     self.player.update(props);
 
-    if self.lifebuoy_cooldown >= 0.0 {
+    if self.bubble_foam_cooldown > 0.0 {
+      self.bubble_foam_cooldown -= props.delta;
+      self.bubble_foam_active = false;
+    } else {
+      self.bubble_foam_cooldown = 0.0;
+    }
+
+    if self.bubble_foam_active && self.bubble_foam_cooldown == 0f32 && self.player.energy >= 25f32 {
+      self.player.energy -= 25f32;
+      for i in 0..BUBBLE_FOAM_COUNT {
+        let angle = -PI / 2.0 + (i as f32) * (2.0 * PI / BUBBLE_FOAM_COUNT as f32);
+        let dir_x = angle.cos();
+        let dir_y = angle.sin();
+
+        props.event_bus.add_entity(
+          EntityWrapper::BubbleFoam(self.create_bubble_foam_at(
+            dir_x,
+            dir_y,
+            props.entity_boundary,
+          )),
+          self.player.area,
+          self.player.world.clone(),
+        );
+      }
+
+      self.bubble_foam_cooldown = BUBBLE_FOAM_COOLDOWN;
+      self.bubble_foam_active = false;
+    }
+
+    /*if self.lifebuoy_cooldown >= 0.0 {
       self.lifebuoy_cooldown -= props.delta;
     }
     if self.magnetic_soul_cooldown > 0.0 {
@@ -136,8 +139,6 @@ impl Hero for Maven {
             w: 10000f32,
             h: 10000f32,
           },
-          world: self.player.world.clone(),
-          area: self.player.area,
         },
         AdditionalEntityProps {
           count: 0,
@@ -152,36 +153,30 @@ impl Hero for Maven {
       soul.caster_id = self.player.id;
       soul.radius_of_action = MAVEN_MAGNETIC_SOUL_RADIUS;
 
-      props.event_bus.add_entity(
-        EntityWrapper::MagneticSoul(soul),
-        self.player.area,
-        self.player.world.clone(),
-      );
+      props
+        .event_bus
+        .add_entity(EntityWrapper::MagneticSoul(soul));
       self.magnetic_soul_spawned = true;
     }
 
     if (self.magnetic_soul_active && !self.player.downed) || self.magnetic_soul_cooldown == 0f32 {
       self.deactivate_magnetic_soul();
-    }
+    }*/
   }
 
   fn input(&mut self, input: &mut Input) {
     self.player.input(input);
     if input.first_ability {
-      self.activate_lifebuoy();
+      self.bubble_foam_active = true;
     }
-    if input.second_ability {
-      self.activate_magnetic_soul();
-    }
+    if input.second_ability {}
   }
 
   fn knock(&mut self) {
     self.player.knock();
-    self.deactivate_lifebuoy();
   }
 
   fn res(&mut self) {
-    self.magnetic_soul_was_spawned_in_past = false;
     self.player.res();
   }
 

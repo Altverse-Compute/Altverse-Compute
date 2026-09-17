@@ -1,6 +1,7 @@
 use crate::bus::PlayerEvent;
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::ids::SLOW_ID;
+use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::Entity;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
@@ -66,6 +67,8 @@ impl EntityLogic for Slow {
       }
     }
   }
+
+  fn interact_with_entity(&mut self, _: &mut EntityWrapper) {}
 
   fn get_changes(&self) -> u8 {
     self.entity.get_changes()

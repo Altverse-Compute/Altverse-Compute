@@ -1,21 +1,25 @@
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::ids::MAGNETIC_SOUL_ID;
+use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::Entity;
 use crate::resources::player::Player;
 use crate::resources::utils::vector::Vector;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
 
-const MAX_DIST: f32 = 120f32;
-const CHASE_SPEED: f32 = 2.5f32;
+const CHASE_SPEED: f32 = 3f32;
 
 #[derive(Clone)]
 pub struct MagneticSoul {
   entity: Entity,
+  // Sets in maven.rs
   pub start_position: Vector,
   pub timeout: f32,
+  // Sets in maven.rs
   pub caster_id: u64,
   was_interacted: bool,
+  // Sets in maven.rs
+  pub radius_of_action: f32,
 }
 
 impl MagneticSoul {
@@ -26,9 +30,10 @@ impl MagneticSoul {
     Self {
       start_position: entity.pos.clone(),
       entity,
-      timeout: 3000f32,
+      timeout: 6000f32,
       caster_id: 0,
       was_interacted: false,
+      radius_of_action: 120f32,
     }
   }
 
@@ -61,7 +66,7 @@ impl EntityLogic for MagneticSoul {
     }
 
     let mut target: Option<&&mut Player> = None;
-    let mut last_distance = MAX_DIST;
+    let mut last_distance = self.radius_of_action;
     for player in props.players.iter() {
       if player.pos.x > -player.radius
         && player.pos.x - player.radius < self.entity.boundary.w
@@ -71,7 +76,7 @@ impl EntityLogic for MagneticSoul {
           player.pos.x - self.entity.pos.x,
           player.pos.y - self.entity.pos.y,
         );
-        if dist <= MAX_DIST && dist < last_distance {
+        if dist <= self.radius_of_action && dist < last_distance {
           last_distance = dist;
           target = Some(player);
         }
@@ -94,7 +99,7 @@ impl EntityLogic for MagneticSoul {
         next_y - self.start_position.y,
       );
 
-      if dist_from_origin > MAX_DIST {
+      if dist_from_origin > self.radius_of_action {
         self.move_back_to_origin();
         return;
       }
@@ -144,6 +149,8 @@ impl EntityLogic for MagneticSoul {
       }
     }
   }
+
+  fn interact_with_entity(&mut self, _: &mut EntityWrapper) {}
 
   fn get_changes(&self) -> u8 {
     self.entity.get_changes()

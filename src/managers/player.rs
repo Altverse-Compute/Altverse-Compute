@@ -33,7 +33,7 @@ impl PlayersManager {
     worlds: &mut HashMap<String, World>,
     network_bus: &mut NetworkBus,
   ) -> Result<(), Error> {
-    let hero = HeroWrapper::new("maven", player_props.clone())?;
+    let hero = HeroWrapper::new("bubble", player_props.clone())?;
     let player = hero.player().clone();
     let player_id = hero.player().id;
     let world_name = hero.player().world.clone();
@@ -123,6 +123,8 @@ impl PlayersManager {
             delta: update_props.delta,
             players: area.get_players_vec(&players_clone),
             event_bus: &mut event_bus,
+            entity_boundary: area.as_boundary(),
+            player_boundary: area.as_boundary_player(),
           };
           hero.update(&mut update_player_props);
           let boundary = area.as_boundary_player();

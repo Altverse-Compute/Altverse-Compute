@@ -1,5 +1,6 @@
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::ids::DASHER_ID;
+use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::Entity;
 use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, distance};
@@ -12,7 +13,7 @@ pub struct Dasher {
 
 impl Dasher {
   pub fn new(props: EntityProps, _: AdditionalEntityProps) -> Self {
-    let mut entity = Entity::new(props);
+    let mut entity = Entity::new(props.clone());
     entity.type_id = DASHER_ID;
     Self {
       entity,
@@ -46,6 +47,8 @@ impl EntityLogic for Dasher {
       self.entity.angle_to_vel();
     }
   }
+
+  fn interact_with_entity(&mut self, _: &mut EntityWrapper) {}
 
   fn get_changes(&self) -> u8 {
     self.entity.get_changes()

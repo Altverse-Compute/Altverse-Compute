@@ -28,13 +28,15 @@ pub struct Boundary {
   pub h: f32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct EntityProps {
   pub id: u64,
   pub type_id: u64,
   pub radius: f32,
   pub speed: f32,
   pub boundary: Boundary,
+  pub area: u64,
+  pub world: String,
 }
 
 pub struct EntityUpdateProps<'a> {
@@ -62,13 +64,21 @@ pub struct PlayerUpdateProps<'a> {
   pub time_fix: f32,
   pub players: Vec<&'a Player>,
   pub event_bus: &'a mut EventBus,
+  pub entity_boundary: Boundary,
+  pub player_boundary: Boundary,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct AdditionalEntityProps {
   pub count: u64,
   pub num: u64,
   pub inverse: bool,
+}
+
+#[derive(Clone)]
+pub struct AdditionalAreaProps {
+  index: u64,
+  world: String,
 }
 
 // functions

@@ -8,6 +8,7 @@ use crate::resources::player::Player;
 use crate::resources::world::World;
 use crate::resources::{EffectUpdateProps, EntityUpdateProps, UpdateProps, distance};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 pub struct WorldsManager {
   pub worlds: HashMap<String, World>,
@@ -100,6 +101,32 @@ impl WorldsManager {
           }
         }
 
+        let ids: Vec<u64> = area.entities.keys().copied().collect();
+
+        for id in &ids {
+          let interactable = area
+            .entities
+            .get(id)
+            .map(|e| e.entity().interactable_with_entities)
+            .unwrap_or(false);
+
+          if !interactable {
+            continue;
+          }
+
+          if let Some(mut entity) = area.entities.remove(id) {
+            for second_id in &ids {
+              if id == second_id {
+                continue;
+              }
+              if let Some(second_entity) = area.entities.get_mut(second_id) {
+                entity.interact_with_entity(second_entity);
+              }
+            }
+            area.entities.insert(*id, entity);
+          }
+        }
+
         for first_id in &area.players_id {
           for second_id in &area.players_id {
             if first_id == second_id {
@@ -124,11 +151,17 @@ impl WorldsManager {
           }
         }
 
-        for entity in event_bus.entities_to_spawn.iter() {
-          let id = area.add_entity(entity.clone());
-          self.spawned_entities.push(id);
+        let mut i = 0;
+        while i < event_bus.entities_to_spawn.len() {
+          let wrap = &event_bus.entities_to_spawn[i];
+          if wrap.area as usize == index && &wrap.world == name {
+            let wrap = event_bus.entities_to_spawn.remove(i);
+            let id = area.add_entity(wrap.entity);
+            self.spawned_entities.push(id);
+          } else {
+            i += 1;
+          }
         }
-        event_bus.entities_to_spawn.clear();
 
         self.new_entities = area.get_packed_entities();
 

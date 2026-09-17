@@ -1,8 +1,10 @@
 use crate::resources::EntityUpdateProps;
+use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::Entity;
 
 pub mod bee;
+pub mod bubblefoam;
 pub mod cloud;
 pub mod corrosive;
 pub mod corrosivesniper;
@@ -29,6 +31,7 @@ pub mod wall;
 pub trait EntityLogic {
   fn update(&mut self, props: &mut EntityUpdateProps);
   fn interact(&mut self, player: &mut HeroWrapper);
+  fn interact_with_entity(&mut self, entity: &mut EntityWrapper);
   fn get_changes(&self) -> u8;
   fn clear_changes(&mut self);
   fn entity(&self) -> &Entity;

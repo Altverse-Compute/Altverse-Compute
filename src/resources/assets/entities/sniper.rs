@@ -58,6 +58,8 @@ impl EntityLogic for Sniper {
               radius: self.entity.radius / 2.0,
               speed: 10.0,
               boundary: self.entity.boundary,
+              area: self.entity.area,
+              world: self.entity.world.clone(),
             },
             AdditionalEntityProps {
               count: 0,
@@ -70,7 +72,11 @@ impl EntityLogic for Sniper {
           bullet.entity.pos.x = self.entity.pos.x;
           bullet.entity.pos.y = self.entity.pos.y;
 
-          props.event_bus.add_entity(EntityWrapper::Bullet(bullet));
+          props.event_bus.add_entity(
+            EntityWrapper::Bullet(bullet),
+            self.entity.area,
+            self.entity.world.clone(),
+          );
 
           self.timer = 0.0;
         }
@@ -81,6 +87,8 @@ impl EntityLogic for Sniper {
   fn interact(&mut self, player: &mut HeroWrapper) {
     self.entity.interact(player);
   }
+
+  fn interact_with_entity(&mut self, _: &mut EntityWrapper) {}
 
   fn get_changes(&self) -> u8 {
     self.entity.get_changes()
@@ -134,6 +142,8 @@ impl EntityLogic for Bullet {
   fn interact(&mut self, player: &mut HeroWrapper) {
     self.entity.interact(player);
   }
+
+  fn interact_with_entity(&mut self, _: &mut EntityWrapper) {}
 
   fn get_changes(&self) -> u8 {
     self.entity.get_changes()

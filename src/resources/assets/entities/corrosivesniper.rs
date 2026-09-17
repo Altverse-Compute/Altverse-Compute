@@ -58,6 +58,8 @@ impl EntityLogic for CorrosiveSniper {
               radius: self.entity.radius / 2.0,
               speed: 10.0,
               boundary: self.entity.boundary,
+              area: self.entity.area,
+              world: self.entity.world.clone(),
             },
             AdditionalEntityProps {
               count: 0,
@@ -70,9 +72,11 @@ impl EntityLogic for CorrosiveSniper {
           bullet.entity.pos.x = self.entity.pos.x;
           bullet.entity.pos.y = self.entity.pos.y;
 
-          props
-            .event_bus
-            .add_entity(EntityWrapper::CorrosiveBullet(bullet));
+          props.event_bus.add_entity(
+            EntityWrapper::CorrosiveBullet(bullet),
+            self.entity.area,
+            self.entity.world.clone(),
+          );
 
           self.timer = 0.0;
         }
@@ -83,6 +87,8 @@ impl EntityLogic for CorrosiveSniper {
   fn interact(&mut self, player: &mut HeroWrapper) {
     self.entity.interact(player);
   }
+
+  fn interact_with_entity(&mut self, _: &mut EntityWrapper) {}
 
   fn get_changes(&self) -> u8 {
     self.entity.get_changes()
@@ -148,6 +154,8 @@ impl EntityLogic for CorrosiveBullet {
       }
     }
   }
+
+  fn interact_with_entity(&mut self, _: &mut EntityWrapper) {}
 
   fn get_changes(&self) -> u8 {
     self.entity.get_changes()

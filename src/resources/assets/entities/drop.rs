@@ -1,5 +1,6 @@
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::ids::DROP_ID;
+use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::hero::HeroWrapper;
 use crate::resources::entity::Entity;
 use crate::resources::utils::vector::Vector;
@@ -113,6 +114,8 @@ impl EntityLogic for Drop {
   fn interact(&mut self, player: &mut HeroWrapper) {
     self.entity.interact(player);
   }
+
+  fn interact_with_entity(&mut self, _: &mut EntityWrapper) {}
 
   fn get_changes(&self) -> u8 {
     self.entity.get_changes()

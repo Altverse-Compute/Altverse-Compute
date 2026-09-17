@@ -11,8 +11,16 @@ pub struct World {
 impl World {
   pub fn new(raw_world: RawWorld) -> Self {
     let mut areas = Vec::new();
+    let mut index: u64 = 0;
     for a in &raw_world.areas {
-      areas.push(Area::new(a.clone()));
+      areas.push(Area::new(
+        a.clone(),
+        super::AdditionalAreaProps {
+          index,
+          world: raw_world.name.clone(),
+        },
+      ));
+      index += 1;
     }
     Self { raw_world, areas }
   }

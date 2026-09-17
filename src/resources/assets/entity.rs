@@ -1,5 +1,6 @@
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::bee::Bee;
+use crate::resources::assets::entities::bubblefoam::BubbleFoam;
 use crate::resources::assets::entities::cloud::Cloud;
 use crate::resources::assets::entities::corrosive::Corrosive;
 use crate::resources::assets::entities::corrosivesniper::{CorrosiveBullet, CorrosiveSniper};
@@ -56,6 +57,7 @@ macro_rules! entity_dispatch {
       EntityWrapper::CorrosiveBullet(v) => v.$method($($arg),*),
       EntityWrapper::Dasher(v) => v.$method($($arg),*),
       EntityWrapper::MagneticSoul(v) => v.$method($($arg),*),
+      EntityWrapper::BubbleFoam(v) => v.$method($($arg),*),
     }
   };
 }
@@ -89,6 +91,7 @@ pub enum EntityWrapper {
   CorrosiveBullet(CorrosiveBullet),
   Dasher(Dasher),
   MagneticSoul(MagneticSoul),
+  BubbleFoam(BubbleFoam),
 }
 
 impl EntityWrapper {
@@ -98,35 +101,67 @@ impl EntityWrapper {
     additional: AdditionalEntityProps,
   ) -> Result<Self, Error> {
     match name {
-      "normal" => Ok(EntityWrapper::Normal(Normal::new(*props, additional))),
-      "flame" => Ok(EntityWrapper::Flame(Flame::new(*props, additional))),
-      "fade" => Ok(EntityWrapper::Fade(Fade::new(*props, additional))),
-      "wall" => Ok(EntityWrapper::Wall(Wall::new(*props, additional))),
-      "immune" => Ok(EntityWrapper::Immune(Immune::new(*props, additional))),
+      "normal" => Ok(EntityWrapper::Normal(Normal::new(
+        props.clone(),
+        additional,
+      ))),
+      "flame" => Ok(EntityWrapper::Flame(Flame::new(props.clone(), additional))),
+      "fade" => Ok(EntityWrapper::Fade(Fade::new(props.clone(), additional))),
+      "wall" => Ok(EntityWrapper::Wall(Wall::new(props.clone(), additional))),
+      "immune" => Ok(EntityWrapper::Immune(Immune::new(
+        props.clone(),
+        additional,
+      ))),
       "flame_sniper" => Ok(EntityWrapper::FlameSniper(FlameSniper::new(
-        *props, additional,
+        props.clone(),
+        additional,
       ))),
-      "drop" => Ok(EntityWrapper::Drop(Drop::new(*props, additional))),
-      "homing" => Ok(EntityWrapper::Homing(Homing::new(*props, additional))),
-      "bee" => Ok(EntityWrapper::Bee(Bee::new(*props, additional))),
-      "sniper" => Ok(EntityWrapper::Sniper(Sniper::new(*props, additional))),
+      "drop" => Ok(EntityWrapper::Drop(Drop::new(props.clone(), additional))),
+      "homing" => Ok(EntityWrapper::Homing(Homing::new(
+        props.clone(),
+        additional,
+      ))),
+      "bee" => Ok(EntityWrapper::Bee(Bee::new(props.clone(), additional))),
+      "sniper" => Ok(EntityWrapper::Sniper(Sniper::new(
+        props.clone(),
+        additional,
+      ))),
       "homing_sniper" => Ok(EntityWrapper::HomingSniper(HomingSniper::new(
-        *props, additional,
+        props.clone(),
+        additional,
       ))),
-      "slower" => Ok(EntityWrapper::Slow(Slow::new(*props, additional))),
-      "sizer" => Ok(EntityWrapper::Sizer(Sizer::new(*props, additional))),
-      "icicle" => Ok(EntityWrapper::Icicle(Icicle::new(*props, additional))),
-      "draining" => Ok(EntityWrapper::Draining(Draining::new(*props, additional))),
-      "leaf" => Ok(EntityWrapper::Leaf(Leaf::new(*props, additional))),
-      "cloud" => Ok(EntityWrapper::Cloud(Cloud::new(*props, additional))),
+      "slower" => Ok(EntityWrapper::Slow(Slow::new(props.clone(), additional))),
+      "sizer" => Ok(EntityWrapper::Sizer(Sizer::new(props.clone(), additional))),
+      "icicle" => Ok(EntityWrapper::Icicle(Icicle::new(
+        props.clone(),
+        additional,
+      ))),
+      "draining" => Ok(EntityWrapper::Draining(Draining::new(
+        props.clone(),
+        additional,
+      ))),
+      "leaf" => Ok(EntityWrapper::Leaf(Leaf::new(props.clone(), additional))),
+      "cloud" => Ok(EntityWrapper::Cloud(Cloud::new(props.clone(), additional))),
       "storm_cloud" => Ok(EntityWrapper::StormCloud(StormCloud::new(
-        *props, additional,
+        props.clone(),
+        additional,
       ))),
-      "corrosive" => Ok(EntityWrapper::Corrosive(Corrosive::new(*props, additional))),
+      "corrosive" => Ok(EntityWrapper::Corrosive(Corrosive::new(
+        props.clone(),
+        additional,
+      ))),
       "corrosive_sniper" => Ok(EntityWrapper::CorrosiveSniper(CorrosiveSniper::new(
-        *props, additional,
+        props.clone(),
+        additional,
       ))),
-      "dasher" => Ok(EntityWrapper::Dasher(Dasher::new(*props, additional))),
+      "dasher" => Ok(EntityWrapper::Dasher(Dasher::new(
+        props.clone(),
+        additional,
+      ))),
+      "bubble" => Ok(EntityWrapper::BubbleFoam(BubbleFoam::new(
+        props.clone(),
+        additional,
+      ))),
       _ => Err(Error::new(
         Status::InvalidArg,
         "Unknown enemy type: ".to_string() + name,
@@ -140,6 +175,10 @@ impl EntityWrapper {
 
   pub fn interact(&mut self, player: &mut HeroWrapper) {
     entity_dispatch!(self, interact(player));
+  }
+
+  pub fn interact_with_entity(&mut self, entity: &mut EntityWrapper) {
+    entity_dispatch!(self, interact_with_entity(entity));
   }
 
   pub fn get_changes(&self) -> u8 {
