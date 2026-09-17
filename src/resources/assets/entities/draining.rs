@@ -62,7 +62,7 @@ impl EntityLogic for Draining {
           player.pos.y - self.entity.pos.y,
         ) <= self.entity.radius + player.radius
         {
-          hero.knock();
+          hero.knock(self.entity_mut());
         }
       }
     }

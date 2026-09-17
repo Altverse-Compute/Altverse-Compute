@@ -2,24 +2,29 @@ use std::f32::consts::PI;
 
 use crate::resources::assets::entities::EntityLogic;
 use crate::resources::assets::entities::bubblefoam::BubbleFoam;
-use crate::resources::assets::entities::magneticsoul::MagneticSoul;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::heroes::Hero;
-use crate::resources::assets::heroes::ids::{BUBBLE_ID, MAVEN_ID};
+use crate::resources::assets::heroes::ids::BUBBLE_ID;
+use crate::resources::entity::Entity;
 use crate::resources::player::Player;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
-use crate::resources::{AdditionalEntityProps, Boundary, EntityProps, PlayerUpdateProps, distance};
+use crate::resources::{AdditionalEntityProps, Boundary, EntityProps, PlayerUpdateProps};
 
 #[derive(Clone)]
 pub struct Bubble {
   player: Player,
   bubble_foam_active: bool,
   bubble_foam_cooldown: f32,
+  bubble_wrap_created: bool,
+  bubble_wrap_cooldown: f32,
+  bubble_wrap_creating_cooldown: f32,
 }
 
 const BUBBLE_FOAM_COUNT: usize = 5;
 const BUBBLE_FOAM_COOLDOWN: f32 = 10000f32;
+const BUBBLE_WRAP_CREATE_COOLDOWN: f32 = 6000f32;
+const BUBBLE_WRAP_COOLDOWN: f32 = 12000f32;
 
 impl Bubble {
   pub fn new(props: JoinProps) -> Self {
@@ -29,6 +34,9 @@ impl Bubble {
       player,
       bubble_foam_active: false,
       bubble_foam_cooldown: 0f32,
+      bubble_wrap_created: false,
+      bubble_wrap_cooldown: 0f32,
+      bubble_wrap_creating_cooldown: 0f32,
     }
   }
 
@@ -58,6 +66,29 @@ impl Bubble {
 
     foam
   }
+
+  fn created_bubble_wrap(&mut self) {
+    self.player.state = 1;
+    self.player.changed_state();
+    self.player.state_meta = 16f32;
+    self.player.changed_state_meta();
+  }
+
+  fn destroyed_bubble_wrap(&mut self) {
+    self.player.state = 0;
+    self.player.changed_state();
+    self.player.state_meta = 0f32;
+    self.player.changed_state_meta();
+  }
+
+  fn magnitude(x: f32, y: f32) -> f32 {
+    (x * x + y * y).sqrt()
+  }
+
+  fn unit(x: f32, y: f32) -> (f32, f32) {
+    let m = Bubble::magnitude(x, y);
+    if m == 0.0 { (0.0, 0.0) } else { (x / m, y / m) }
+  }
 }
 
 impl Hero for Bubble {
@@ -66,9 +97,19 @@ impl Hero for Bubble {
 
     if self.bubble_foam_cooldown > 0.0 {
       self.bubble_foam_cooldown -= props.delta;
-      self.bubble_foam_active = false;
     } else {
       self.bubble_foam_cooldown = 0.0;
+    }
+
+    if self.bubble_wrap_creating_cooldown > 0.0 {
+      self.bubble_wrap_creating_cooldown -= props.delta;
+      if self.bubble_wrap_creating_cooldown < 100.0 {
+        self.bubble_wrap_created = true;
+        self.created_bubble_wrap();
+      }
+    }
+    if self.bubble_wrap_cooldown > 0.0 {
+      self.bubble_wrap_cooldown -= props.delta;
     }
 
     if self.bubble_foam_active && self.bubble_foam_cooldown == 0f32 && self.player.energy >= 25f32 {
@@ -90,78 +131,8 @@ impl Hero for Bubble {
       }
 
       self.bubble_foam_cooldown = BUBBLE_FOAM_COOLDOWN;
-      self.bubble_foam_active = false;
     }
-
-    /*if self.lifebuoy_cooldown >= 0.0 {
-      self.lifebuoy_cooldown -= props.delta;
-    }
-    if self.magnetic_soul_cooldown > 0.0 {
-      self.magnetic_soul_cooldown -= props.delta;
-    } else {
-      self.magnetic_soul_cooldown = 0.0;
-    }
-
-    if self.lifebuoy_active {
-      self.player.energy -= (props.delta as f32 / 1000.0) * 24.0;
-      if self.player.energy <= 0.0 {
-        self.player.energy = 0.0;
-        self.player.changed_energy();
-        self.deactivate_lifebuoy();
-        return;
-      }
-
-      for player in props.players.iter() {
-        if distance(
-          player.pos.x - self.player.pos.x,
-          player.pos.y - self.player.pos.y,
-        ) <= MAVEN_LIFEBUOY_RADIUS + player.radius
-          && player.downed
-          && player.id != self.player.id
-        {
-          props
-            .event_bus
-            .respawn_player_and_move(player.id, self.player.pos.clone());
-        }
-      }
-    }
-
-    if self.magnetic_soul_active && !self.magnetic_soul_spawned {
-      let mut soul = MagneticSoul::new(
-        EntityProps {
-          id: 2,
-          type_id: 1,
-          radius: 15f32,
-          speed: 0f32,
-          boundary: Boundary {
-            x: -10000f32,
-            y: -10000f32,
-            w: 10000f32,
-            h: 10000f32,
-          },
-        },
-        AdditionalEntityProps {
-          count: 0,
-          num: 0,
-          inverse: false,
-        },
-      );
-      let entity = soul.entity_mut();
-
-      entity.pos = self.player.pos.clone();
-      soul.start_position = self.player.pos.clone();
-      soul.caster_id = self.player.id;
-      soul.radius_of_action = MAVEN_MAGNETIC_SOUL_RADIUS;
-
-      props
-        .event_bus
-        .add_entity(EntityWrapper::MagneticSoul(soul));
-      self.magnetic_soul_spawned = true;
-    }
-
-    if (self.magnetic_soul_active && !self.player.downed) || self.magnetic_soul_cooldown == 0f32 {
-      self.deactivate_magnetic_soul();
-    }*/
+    self.bubble_foam_active = false;
   }
 
   fn input(&mut self, input: &mut Input) {
@@ -169,11 +140,40 @@ impl Hero for Bubble {
     if input.first_ability {
       self.bubble_foam_active = true;
     }
-    if input.second_ability {}
+    if input.second_ability {
+      self.bubble_wrap_creating_cooldown = BUBBLE_WRAP_CREATE_COOLDOWN;
+      self.bubble_wrap_cooldown = BUBBLE_WRAP_COOLDOWN;
+    }
   }
 
-  fn knock(&mut self) {
-    self.player.knock();
+  fn knock(&mut self, entity: &mut Entity) {
+    if !self.bubble_wrap_created || entity.immune {
+      self.player.knock();
+      return;
+    }
+
+    let dist_vec_x = entity.pos.x - self.player.pos.x;
+    let dist_vec_y = entity.pos.y - self.player.pos.y;
+    let dist: f32 = Bubble::magnitude(dist_vec_x, dist_vec_y);
+
+    let pen_depth = self.player.radius + entity.radius - dist;
+    let (unit_x, unit_y) = Bubble::unit(dist_vec_x, dist_vec_y);
+    let pen_x = unit_x * (pen_depth / 2.0);
+    let pen_y = unit_y * (pen_depth / 2.0);
+
+    entity.pos.x += pen_x;
+    entity.pos.y += pen_y;
+    self.player.pos.x -= pen_x;
+    self.player.pos.y -= pen_y;
+
+    entity.changed_pos();
+    self.player.changed_pos();
+
+    let angle_to_entity =
+      (entity.pos.y - self.player.pos.y).atan2(entity.pos.x - self.player.pos.x);
+
+    entity.vel.x = angle_to_entity.cos() * entity.speed;
+    entity.vel.y = angle_to_entity.sin() * entity.speed;
   }
 
   fn res(&mut self) {

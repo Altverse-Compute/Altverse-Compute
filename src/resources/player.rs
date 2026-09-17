@@ -59,7 +59,7 @@ impl Player {
       speed: spawn.speed,
       reserved_speed: spawn.speed,
       energy: spawn.energy,
-      max_energy: spawn.spawn_max_speed,
+      max_energy: spawn.spawn_max_energy,
       downed: false,
       regeneration: spawn.regeneration,
       angle: 0.0,

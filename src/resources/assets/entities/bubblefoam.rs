@@ -8,7 +8,6 @@ use crate::resources::{AdditionalEntityProps, EntityProps, EntityUpdateProps, di
 #[derive(Clone)]
 pub struct BubbleFoam {
   entity: Entity,
-  wrapped_entity_id: Option<u64>,
   was_to_remove: bool,
 }
 
@@ -22,7 +21,6 @@ impl BubbleFoam {
     entity.alpha = 0.3f32;
     Self {
       entity,
-      wrapped_entity_id: None,
       was_to_remove: false,
     }
   }
@@ -78,33 +76,15 @@ impl EntityLogic for BubbleFoam {
     if entity.immune {
       return;
     }
-    match self.wrapped_entity_id {
-      Some(entity_id) => {
-        if entity.id == entity_id {
-          entity.harmless = true;
-          entity.changed_harmless();
-          entity.pos.x = self.entity.pos.x;
-          entity.pos.y = self.entity.pos.y;
-          entity.changed_pos();
-          self.entity.radius = entity.radius + 1f32;
-          self.entity.changed_radius();
-        }
-      }
-      None => {
-        if entity.type_id != BUBBLE_FOAM_ID
-          && distance(
-            entity.pos.x - self.entity.pos.x,
-            entity.pos.y - self.entity.pos.y,
-          ) <= self.entity.radius + entity.radius
-        {
-          entity.harmless = true;
-          entity.changed_harmless();
-          entity.pos.x = self.entity.pos.x;
-          entity.pos.y = self.entity.pos.y;
-          entity.changed_pos();
-          self.wrapped_entity_id = Some(entity.id);
-        }
-      }
+    if entity.type_id != BUBBLE_FOAM_ID
+      && distance(
+        entity.pos.x - self.entity.pos.x,
+        entity.pos.y - self.entity.pos.y,
+      ) <= self.entity.radius + entity.radius
+    {
+      entity.pos.x = self.entity.pos.x;
+      entity.pos.y = self.entity.pos.y;
+      entity.changed_pos();
     }
   }
 

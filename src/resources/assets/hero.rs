@@ -2,6 +2,7 @@ use crate::resources::assets::heroes::Hero;
 use crate::resources::assets::heroes::bubble::Bubble;
 use crate::resources::assets::heroes::magmax::Magmax;
 use crate::resources::assets::heroes::maven::Maven;
+use crate::resources::entity::Entity;
 use crate::resources::player::Player;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
@@ -43,8 +44,8 @@ impl HeroWrapper {
   pub fn input(&mut self, input: &mut Input) {
     hero_dispatch!(self, input(input));
   }
-  pub fn knock(&mut self) {
-    hero_dispatch!(self, knock());
+  pub fn knock(&mut self, entity: &mut Entity) {
+    hero_dispatch!(self, knock(entity));
   }
   pub fn res(&mut self) {
     hero_dispatch!(self, res());

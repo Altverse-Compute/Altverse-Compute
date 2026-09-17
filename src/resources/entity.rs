@@ -138,7 +138,7 @@ impl Entity {
         if distance(player.pos.x - self.pos.x, player.pos.y - self.pos.y)
           <= self.radius + player.radius
         {
-          hero.knock();
+          hero.knock(self);
         }
       }
     }

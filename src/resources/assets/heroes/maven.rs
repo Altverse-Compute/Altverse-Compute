@@ -3,6 +3,7 @@ use crate::resources::assets::entities::magneticsoul::MagneticSoul;
 use crate::resources::assets::entity::EntityWrapper;
 use crate::resources::assets::heroes::Hero;
 use crate::resources::assets::heroes::ids::MAVEN_ID;
+use crate::resources::entity::Entity;
 use crate::resources::player::Player;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
@@ -175,7 +176,7 @@ impl Hero for Maven {
     }
   }
 
-  fn knock(&mut self) {
+  fn knock(&mut self, _: &mut Entity) {
     self.player.knock();
     self.deactivate_lifebuoy();
   }

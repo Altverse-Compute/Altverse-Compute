@@ -1,5 +1,6 @@
 use crate::resources::assets::heroes::Hero;
 use crate::resources::assets::heroes::ids::MAGMAX_ID;
+use crate::resources::entity::Entity;
 use crate::resources::player::Player;
 use crate::resources::utils::input::Input;
 use crate::resources::utils::join::JoinProps;
@@ -89,7 +90,7 @@ impl Hero for Magmax {
     }
   }
 
-  fn knock(&mut self) {
+  fn knock(&mut self, _: &mut Entity) {
     if !self.harden {
       self.disable_flow();
       self.disable_harden();
